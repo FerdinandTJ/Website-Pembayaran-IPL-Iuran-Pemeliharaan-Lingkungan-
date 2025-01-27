@@ -16,3 +16,9 @@
 Sistem ini dibangun menggunakan pola desain **Model-View-Controller (MVC)** untuk memastikan modularitas, kemudahan pemeliharaan, dan pengembangan fitur baru. Pola desain **Singleton** diterapkan untuk menjaga konsistensi pengelolaan konfigurasi sistem dan sesi pengguna.
 
 Desain antarmuka pengguna mencakup halaman khusus untuk warga, pengurus, dan admin, dengan fokus pada pengalaman pengguna yang sederhana dan intuitif.
+
+---
+
+Jika ada pertanyaan, silakan hubungi saya melalui:  
+- Instagram: [@ferdinantj__](https://www.instagram.com/ferdinantj__)  
+- Email: ferdinandtj4@gmail.com
