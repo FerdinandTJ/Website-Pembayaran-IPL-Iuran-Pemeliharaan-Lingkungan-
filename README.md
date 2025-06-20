@@ -20,5 +20,5 @@ Desain antarmuka pengguna mencakup halaman khusus untuk warga, pengurus, dan adm
 ---
 
 Jika ada pertanyaan, silakan hubungi saya melalui:  
-- Instagram: [@ferdinantj__](https://www.instagram.com/ferdinantj__)  
+- Instagram: [@ferdinandtj__](https://www.instagram.com/ferdinandtj__)  
 - Email: ferdinandtj4@gmail.com
