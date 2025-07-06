@@ -1,177 +1,267 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>Invoice Receipt</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-        }
-        .receipt-container {
-            max-width: 600px;
-            background: #fff;
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin: 50px auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .receipt-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .receipt-header h1 {
-            font-size: 1.5rem;
-            margin-bottom: 5px;
-        }
-        .receipt-header p {
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-        .paid-banner {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border: 1px solid #c3e6cb;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        .table {
-            margin-top: 10px;
-        }
-        .total-row {
-            font-weight: bold;
-        }
-        .text-end {
-            text-align: right;
-        }
-    </style>
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url('/warga/dashboard') }}">Home</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/warga/dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/warga/bills') }}">Bills</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/warga/invoice/history') }}">History</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/warga/profile') }}">Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/logout') }}">Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="receipt-container">
-        <!-- Show Banner if Invoice is Paid -->
-        @if($invoice->is_paid && $invoice->is_verified)
-            <div class="paid-banner">
-                This invoice has been paid.
-            </div>
-        @elseif($invoice->is_paid && !$invoice->is_verified)
-            <div class="paid-banner" style="background-color: #f8d7da; color: #721c24; border-color: #f5c6cb;">
-                This invoice has been paid but not yet verified.
-            </div>
-        @endif
+@extends('layouts.app')
 
-        <!-- Header Section -->
-        <div class="receipt-header">
-            <h1>Invoice Receipt</h1>
-            <p>Invoice ID: {{ $invoice->id }}</p>
-        </div>
+@section('title', 'Detail Tagihan')
+@section('page-title', 'Detail Tagihan #' . $invoice->id)
+@section('page-subtitle', 'Informasi lengkap tagihan dan proses pembayaran')
+@section('dashboard-url', url('/warga/dashboard'))
 
-        <!-- Invoice Details -->
-        <div class="mb-4">
-            <p><strong>Account Number:</strong> {{ $invoice->account_number }}</p>
-            <p><strong>Receiver Name:</strong> {{ $invoice->receiver_name }}</p>
-            <p><strong>Created At:</strong> {{ $invoice->created_at->format('d F Y') }}</p>
-        </div>
+@section('nav-items')
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url('/warga/dashboard') }}">
+            <i class="fas fa-tachometer-alt me-1"></i>
+            Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url('/warga/bills') }}">
+            <i class="fas fa-file-invoice me-1"></i>
+            Tagihan
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url('/warga/invoice/history') }}">
+            <i class="fas fa-history me-1"></i>
+            Riwayat
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url('/warga/profile') }}">
+            <i class="fas fa-user me-1"></i>
+            Profil
+        </a>
+    </li>
+@endsection
 
-        <!-- Invoice Components -->
-        <h5>Invoice Breakdown</h5>
-        @if($components->isEmpty())
-            <p class="alert alert-info">No components found for this invoice.</p>
-        @else
-            <table class="table table-borderless">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Bill Name</th>
-                        <th class="text-end">Amount (Rp)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($components as $index => $component)
-                        <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $component->name }}</td>
-                            <td class="text-end">{{ number_format($component->amount, 0, ',', '.') }}</td>
-                        </tr>
-                    @endforeach
-                    <tr class="total-row">
-                        <td colspan="2" class="text-end">Total Amount</td>
-                        <td class="text-end">Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        @endif
-
-        <!-- Payment Button -->
-        <div class="text-center mt-4">
-            <!-- Show disabled button if already paid -->
-            @if($invoice->is_paid)
-                <button type="button" class="btn btn-success" disabled>
-                    Paid
-                </button>
+@section('content')
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Status Banner -->
+            @if($invoice->is_paid && $invoice->is_verified)
+                <div class="alert alert-success d-flex align-items-center mb-4">
+                    <i class="fas fa-check-circle me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h6 class="mb-1">Tagihan Telah Dibayar dan Terverifikasi</h6>
+                        <small>Pembayaran Anda telah berhasil dan sudah diverifikasi oleh admin.</small>
+                    </div>
+                </div>
+            @elseif($invoice->is_paid && !$invoice->is_verified)
+                <div class="alert alert-warning d-flex align-items-center mb-4">
+                    <i class="fas fa-clock me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h6 class="mb-1">Menunggu Verifikasi</h6>
+                        <small>Pembayaran Anda sedang dalam proses verifikasi oleh admin.</small>
+                    </div>
+                </div>
             @else
-                <!-- Button to trigger the modal -->
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                    Pay
-                </button>
+                <div class="alert alert-danger d-flex align-items-center mb-4">
+                    <i class="fas fa-exclamation-triangle me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h6 class="mb-1">Tagihan Belum Dibayar</h6>
+                        <small>Silakan lakukan pembayaran sebelum tanggal jatuh tempo.</small>
+                    </div>
+                </div>
             @endif
+
+            <!-- Invoice Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice me-2"></i>
+                            Detail Tagihan #{{ $invoice->id }}
+                        </h5>
+                        @if($invoice->is_paid)
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>
+                                LUNAS
+                            </span>
+                        @else
+                            <span class="badge bg-warning">
+                                <i class="fas fa-clock me-1"></i>
+                                BELUM BAYAR
+                            </span>
+                        @endif
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Invoice Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Informasi Tagihan
+                            </h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>ID Tagihan:</strong></td>
+                                    <td>#{{ $invoice->id }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>No. Rekening:</strong></td>
+                                    <td>{{ $invoice->account_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Nama Penerima:</strong></td>
+                                    <td>{{ $invoice->receiver_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tanggal Dibuat:</strong></td>
+                                    <td>{{ $invoice->created_at->format('d F Y') }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                Informasi Pembayaran
+                            </h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Periode:</strong></td>
+                                    <td>{{ $invoice->created_at->format('F Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jatuh Tempo:</strong></td>
+                                    <td>
+                                        @php
+                                            $dueDate = \Carbon\Carbon::parse($invoice->created_at)->addMonth()->day(10);
+                                            $isOverdue = $dueDate->isPast() && !$invoice->is_paid;
+                                        @endphp
+                                        <span class="badge {{ $isOverdue ? 'bg-danger' : 'bg-info' }}">
+                                            {{ $dueDate->format('d F Y') }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @if($invoice->is_paid)
+                                <tr>
+                                    <td><strong>Dibayar Pada:</strong></td>
+                                    <td>{{ $invoice->payment_date ? $invoice->payment_date->format('d F Y H:i') : '-' }}</td>
+                                </tr>
+                                @endif
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Components -->
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-list me-1"></i>
+                        Rincian Tagihan
+                    </h6>
+                    @if($components->isEmpty())
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Tidak ada komponen tagihan ditemukan.
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Nama Item</th>
+                                        <th class="text-end" style="width: 150px;">Jumlah</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($components as $index => $component)
+                                        <tr>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $component->name }}</td>
+                                            <td class="text-end">
+                                                Rp {{ number_format($component->amount, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot class="table-dark">
+                                    <tr>
+                                        <th colspan="2" class="text-end">Total Tagihan:</th>
+                                        <th class="text-end">
+                                            Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}
+                                        </th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    @endif
+
+                    <!-- Payment Actions -->
+                    <div class="text-center mt-4">
+                        @if($invoice->is_paid)
+                            <button type="button" class="btn btn-success btn-lg" disabled>
+                                <i class="fas fa-check-circle me-2"></i>
+                                Tagihan Sudah Dibayar
+                            </button>
+                            @if($invoice->payment_proof)
+                                <button type="button" class="btn btn-outline-primary ms-2" 
+                                        data-bs-toggle="modal" data-bs-target="#proofModal">
+                                    <i class="fas fa-eye me-1"></i>
+                                    Lihat Bukti Bayar
+                                </button>
+                            @endif
+                        @else
+                            <button type="button" class="btn btn-primary btn-lg" 
+                                    data-bs-toggle="modal" data-bs-target="#paymentModal">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Bayar Sekarang
+                            </button>
+                            <a href="{{ url('/warga/bills') }}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Kembali ke Tagihan
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Modal for uploading proof of transfer -->
+    <!-- Payment Modal -->
     @if(!$invoice->is_paid)
         <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <form action="{{ url('/warga/invoice/' . $invoice->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="paymentModalLabel">Upload Proof of Transfer</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="paymentModalLabel">
+                                <i class="fas fa-upload me-2"></i>
+                                Upload Bukti Transfer
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Petunjuk Pembayaran:</strong>
+                                <ol class="mb-0 mt-2">
+                                    <li>Lakukan transfer ke rekening yang telah ditentukan</li>
+                                    <li>Upload bukti transfer dalam format gambar (JPG, PNG, dsb)</li>
+                                    <li>Tunggu verifikasi dari admin</li>
+                                </ol>
+                            </div>
                             <div class="mb-3">
-                                <label for="proof" class="form-label">Proof of Transfer</label>
-                                <input type="file" class="form-control" id="proof" name="proof" accept="image/*" required>
+                                <label for="proof" class="form-label">
+                                    <i class="fas fa-image me-1"></i>
+                                    Bukti Transfer <span class="text-danger">*</span>
+                                </label>
+                                <input type="file" class="form-control" id="proof" name="proof" 
+                                       accept="image/*" required>
+                                <div class="form-text">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Format yang didukung: JPG, PNG, GIF. Maksimal 5MB.
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Submit Payment</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>
+                                Batal
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload me-1"></i>
+                                Submit Pembayaran
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -179,6 +269,35 @@
         </div>
     @endif
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    <!-- Proof Modal -->
+    @if($invoice->is_paid && $invoice->payment_proof)
+        <div class="modal fade" id="proofModal" tabindex="-1" aria-labelledby="proofModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="proofModalLabel">
+                            <i class="fas fa-image me-2"></i>
+                            Bukti Pembayaran - Tagihan #{{ $invoice->id }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="{{ asset('storage/' . $invoice->payment_proof) }}" 
+                             alt="Bukti Pembayaran" class="img-fluid rounded shadow">
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{{ asset('storage/' . $invoice->payment_proof) }}" 
+                           target="_blank" class="btn btn-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>
+                            Buka di Tab Baru
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+@endsection

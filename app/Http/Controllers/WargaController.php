@@ -15,11 +15,35 @@ class WargaController extends Controller
     {
         $user = Auth::user();
 
-        // Fetch the oldest unpaid bill for the user
-        $oldestUnpaidInvoice = Invoice::where('receiver_name', $user->name)
+        // Fetch all unpaid invoices for the user
+        $unpaidInvoices = Invoice::where('receiver_name', $user->name)
             ->where('is_paid', false)
-            ->orderBy('created_at', 'asc')
-            ->first();
+            ->get();
+
+        // Fetch all paid invoices for the user
+        $paidInvoices = Invoice::where('receiver_name', $user->name)
+            ->where('is_paid', true)
+            ->get();
+
+        // Count invoices
+        $unpaidInvoicesCount = $unpaidInvoices->count();
+        $paidInvoicesCount = $paidInvoices->count();
+        $totalInvoicesCount = $unpaidInvoicesCount + $paidInvoicesCount;
+
+        // Calculate total unpaid amount
+        $totalUnpaidAmount = $unpaidInvoices->sum('total_amount');
+
+        // Calculate total paid amount
+        $totalPaid = $paidInvoices->sum('total_amount');
+
+        // Fetch the oldest unpaid bill for the user
+        $oldestUnpaidInvoice = $unpaidInvoices->sortBy('created_at')->first();
+
+        // Fetch the most recent paid invoice
+        $recentPaidInvoice = $paidInvoices->sortByDesc('created_at')->first();
+
+        // Fetch recent paid invoices (last 5)
+        $recentPaidInvoices = $paidInvoices->sortByDesc('created_at')->take(5);
 
         // Fetch cashflow summary for the user's housing
         $cashflows = Cashflow::where('housing_name', $user->housing_name)->get();
@@ -31,7 +55,16 @@ class WargaController extends Controller
         // Pass data to the view
         return view('warga.dashboard', [
             'user' => $user,
+            'unpaidInvoices' => $unpaidInvoices,
+            'paidInvoices' => $paidInvoices,
+            'unpaidInvoicesCount' => $unpaidInvoicesCount,
+            'paidInvoicesCount' => $paidInvoicesCount,
+            'totalInvoicesCount' => $totalInvoicesCount,
+            'totalUnpaidAmount' => $totalUnpaidAmount,
+            'totalPaid' => $totalPaid,
             'oldestUnpaidInvoice' => $oldestUnpaidInvoice,
+            'recentPaidInvoice' => $recentPaidInvoice,
+            'recentPaidInvoices' => $recentPaidInvoices,
             'totalIncome' => $totalIncome,
             'totalExpense' => $totalExpense,
             'totalAmount' => $totalAmount,

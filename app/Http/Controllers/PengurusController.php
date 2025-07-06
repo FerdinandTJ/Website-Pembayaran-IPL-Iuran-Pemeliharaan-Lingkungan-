@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class PengurusController extends Controller
 {
@@ -90,29 +91,61 @@ class PengurusController extends Controller
 
     // Handle the registration
     function addMember(Request $request) {
-        // Validate the form inputs
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'phone_number' => 'required|string|max:15',
-            'house_address' => 'required|string|max:255',
-            'password' => 'required|string|min:8',
-        ]);
+        try {
+            // Validate the form inputs
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'username' => 'required|string|max:255|unique:users,username',
+                'email' => 'required|string|email|max:255|unique:users,email',
+                'phone_number' => 'required|string|max:15',
+                'house_address' => 'required|string|max:255',
+                'password' => 'required|string|min:8',
+            ], [
+                'name.required' => 'Nama lengkap wajib diisi',
+                'username.required' => 'Username wajib diisi',
+                'username.unique' => 'Username sudah digunakan, pilih username lain',
+                'email.required' => 'Email wajib diisi',
+                'email.email' => 'Format email tidak valid',
+                'email.unique' => 'Email sudah terdaftar, gunakan email lain',
+                'phone_number.required' => 'Nomor telepon wajib diisi',
+                'house_address.required' => 'Alamat rumah wajib diisi',
+                'password.required' => 'Password wajib diisi',
+                'password.min' => 'Password minimal 8 karakter',
+            ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'warga',
-            'housing_address' => Auth::user()->housing_address,
-            'housing_name' => Auth::user()->housing_name,
-            'phone_number' => $request->phone_number,
-            'house_address' => $request->house_address,
-        ]);
+            // Get current pengurus data
+            $currentUser = Auth::user();
+            
+            // Create new user
+            $userData = [
+                'name' => $request->name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'warga',
+                'housing_address' => $currentUser->housing_address,
+                'housing_name' => $currentUser->housing_name,
+                'phone_number' => $request->phone_number,
+                'house_address' => $request->house_address,
+            ];
+            
+            $user = User::create($userData);
 
-        return redirect('/pengurus/members')->with('success', 'Member added successfully!');
+            return redirect('/pengurus/members')->with('success', 'Warga berhasil didaftarkan! Akun atas nama ' . $user->name . ' telah dibuat.');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Validation errors will be handled automatically by Laravel
+            return redirect()->back()->withErrors($e->validator)->withInput();
+            
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('Error adding member: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mendaftarkan warga. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
+        }
     }
 
     function update_member(Request $request, $id)
