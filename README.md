@@ -571,7 +571,7 @@ SOFTWARE.
 **Ferdinand TJ**
 - 📧 Email: ferdinandtj4@gmail.com
 - 📱 Instagram: [@ferdinandtj__](https://www.instagram.com/ferdinandtj__)
-- 💼 LinkedIn: [Ferdinand TJ](https://linkedin.com/in/ferdinandtj)
+- 💼 LinkedIn: [Ferdinand TJ](https://www.linkedin.com/in/ferdinandtj)
 - 🐙 GitHub: [@ferdinandtj](https://github.com/ferdinandtj)
 
 ### Support
@@ -581,7 +581,7 @@ Jika Anda mengalami masalah atau memiliki pertanyaan:
 1. **📋 Issues**: [GitHub Issues](https://github.com/username/enviropay/issues)
 2. **💬 Discussions**: [GitHub Discussions](https://github.com/username/enviropay/discussions)
 3. **📧 Email**: support@enviropay.com
-4. **📞 WhatsApp**: +62 xxx-xxxx-xxxx
+4. **📞 WhatsApp**: +62 81684662
 
 ---
 
