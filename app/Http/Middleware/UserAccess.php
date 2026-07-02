@@ -4,24 +4,18 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserAccess
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle(Request $request, Closure $next, $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (Auth::user() && Auth::user()->role == $role) {
-            return $next($request);
-        }
+        $user = $request->user();
 
-        return response()->json([
-            'message' => 'Unauthorized',
-        ], 401);
+        abort_unless($user && $user->is_active, 403, 'Akun tidak aktif.');
+        abort_if($user->housing_id && ! $user->housing?->is_active, 403, 'Perumahan tidak aktif.');
+        abort_unless(in_array($user->role, $roles, true), 403, 'Anda tidak memiliki akses.');
+
+        return $next($request);
     }
 }

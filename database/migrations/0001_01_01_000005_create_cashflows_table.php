@@ -6,24 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('cashflows', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('housing_id')->constrained()->restrictOnDelete();
+            $table->foreignId('invoice_id')->nullable()->unique()->constrained()->restrictOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('name');
-            $table->string('housing_name');
             $table->enum('type', ['income', 'expense']);
+            $table->enum('source', ['manual', 'invoice'])->default('manual');
             $table->decimal('total_cashflow', 15, 2);
             $table->timestamps();
+
+            $table->index(['housing_id', 'type', 'source']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('cashflows');

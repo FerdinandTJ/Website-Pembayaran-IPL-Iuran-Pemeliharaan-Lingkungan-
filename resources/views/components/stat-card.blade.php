@@ -1,0 +1,2 @@
+@props(['label', 'value', 'icon' => 'bar-chart', 'hint' => null])
+<div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3"><div class="stat-icon"><i class="bi bi-{{ $icon }}"></i></div><div class="min-w-0"><div class="stat-label">{{ $label }}</div><div class="stat-value text-truncate">{{ $value }}</div>@if($hint)<small class="text-secondary">{{ $hint }}</small>@endif</div></div></div>

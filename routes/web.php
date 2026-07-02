@@ -1,75 +1,53 @@
 <?php
 
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\SessionController;
-use App\Http\Controllers\PengurusController;
-use App\Http\Controllers\WargaController;
-use App\Http\Middleware\UserAccess;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\HousingController;
+use App\Http\Controllers\Admin\ManagerController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PaymentProofController;
+use App\Http\Controllers\Pengurus\CashflowController;
+use App\Http\Controllers\Pengurus\DashboardController as ManagerDashboardController;
+use App\Http\Controllers\Pengurus\InvoiceController as ManagerInvoiceController;
+use App\Http\Controllers\Pengurus\ResidentController;
+use App\Http\Controllers\Pengurus\VerificationController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Warga\DashboardController as ResidentDashboardController;
+use App\Http\Controllers\Warga\InvoiceController as ResidentInvoiceController;
+use App\Http\Controllers\Warga\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('/', [SessionController::class, 'index'])->name('login');
-    Route::post('/login', [SessionController::class, 'login']);
+    Route::get('/', [AuthController::class, 'create'])->name('login');
+    Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:login')->name('login.store');
 });
 
-Route::get('/home', function () {
-    if (Auth::check()) {
-        // Get the authenticated user's role
-        $userRole = Auth::user()->role;
-        switch ($userRole) {
-            case 'admin':
-                return redirect('/admin/dashboard');
-            case 'pengurus':
-                return redirect('/pengurus/dashboard');
-            case 'warga':
-                return redirect('/warga/dashboard');
-            default:
-                return redirect('/warga/dashboard');
-        }
-    }
-    return redirect('/');
-});
+Route::middleware('auth')->group(function () {
+    Route::get('/home', [AuthController::class, 'home'])->name('home');
+    Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/invoices/{invoice}/proof', PaymentProofController::class)->name('invoices.proof');
 
-// Group routes that require authentication
-Route::middleware('auth')->group(function () {    
-    // Admin routes
-    Route::middleware(UserAccess::class . ':admin')->group(function () {
-        Route::get('/admin/profile', [SessionController::class, 'profile']);
-        Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
-        Route::post('/admin/register', [AdminController::class, 'register']);
+    Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
+        Route::get('/dashboard', AdminDashboardController::class)->name('dashboard');
+        Route::resource('housings', HousingController::class)->except('show');
+        Route::resource('managers', ManagerController::class)->except('show');
+        Route::patch('/managers/{manager}/password', [ManagerController::class, 'resetPassword'])->name('managers.password');
     });
 
-    // Pengurus routes
-    Route::middleware(UserAccess::class . ':pengurus')->group(function () {
-        Route::get('/pengurus/profile', [SessionController::class, 'profile']);
-        Route::get('/pengurus/dashboard', [PengurusController::class, 'dashboard']);
-        Route::get('/pengurus/register', [PengurusController::class, 'register']);
-        Route::post('/pengurus/register', [PengurusController::class, 'addMember']);
-        Route::get('/pengurus/members', [PengurusController::class, 'view_member']);
-        Route::put('/pengurus/members/update/{id}', [PengurusController::class, 'update_member'])->name('pengurus.update_member');
-        Route::delete('/pengurus/members/delete/{id}', [PengurusController::class, 'delete_member'])->name('pengurus.delete_member');
-        Route::get('/pengurus/invoice', [PengurusController::class, 'create_invoice']);
-        Route::post('/pengurus/broadcast', [PengurusController::class, 'send_invoice']);
-        Route::get('/pengurus/invoice/verification', [PengurusController::class, 'verify_invoice']);
-        Route::post('/pengurus/invoice/verify/{id}', [PengurusController::class, 'process_verification']);
-        Route::post('/pengurus/invoice/unverify/{id}', [PengurusController::class, 'process_unverification']);
-        Route::get('/pengurus/cashflow', [PengurusController::class, 'view_cashflow']);
-        Route::post('/pengurus/cashflow/add', [PengurusController::class, 'add_cashflow']);
-        Route::put('/pengurus/cashflow/update/{id}', [PengurusController::class, 'update_cashflow']);
-        Route::delete('/pengurus/cashflow/delete/{id}', [PengurusController::class, 'delete_cashflow']);
+    Route::prefix('pengurus')->name('pengurus.')->middleware('role:pengurus')->group(function () {
+        Route::get('/dashboard', ManagerDashboardController::class)->name('dashboard');
+        Route::resource('residents', ResidentController::class)->except('show');
+        Route::patch('/residents/{resident}/password', [ResidentController::class, 'resetPassword'])->name('residents.password');
+        Route::resource('invoices', ManagerInvoiceController::class)->only('index', 'create', 'store');
+        Route::get('/verifications', [VerificationController::class, 'index'])->name('verifications.index');
+        Route::post('/invoices/{invoice}/verify', [VerificationController::class, 'verify'])->name('invoices.verify');
+        Route::post('/invoices/{invoice}/reject', [VerificationController::class, 'reject'])->name('invoices.reject');
+        Route::resource('cashflows', CashflowController::class)->only('index', 'store', 'update', 'destroy');
     });
 
-    // Warga routes
-    Route::middleware(UserAccess::class . ':warga')->group(function () {
-        Route::get('/warga/profile', [SessionController::class, 'profile']);
-        Route::get('/warga/dashboard', [WargaController::class, 'dashboard']);
-        Route::get('/warga/bills', [WargaController::class, 'viewBills']);
-        Route::get('/warga/invoice/history', [WargaController::class, 'invoiceHistory']);
-        Route::get('/warga/invoice/{id}', [WargaController::class, 'viewInvoice']);
-        Route::post('/warga/invoice/{id}', [WargaController::class, 'payInvoice']);
+    Route::prefix('warga')->name('warga.')->middleware('role:warga')->group(function () {
+        Route::get('/dashboard', ResidentDashboardController::class)->name('dashboard');
+        Route::resource('invoices', ResidentInvoiceController::class)->only('index', 'show');
+        Route::post('/invoices/{invoice}/payment', [PaymentController::class, 'store'])->name('invoices.payment');
     });
-
-    // Logout route
-    Route::get('/logout', [SessionController::class, 'logout']);
 });
