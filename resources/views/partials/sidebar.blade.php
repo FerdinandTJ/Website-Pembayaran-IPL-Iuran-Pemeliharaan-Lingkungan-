@@ -1,29 +1,32 @@
 @php
     $user = auth()->user();
     $dashboardRoute = match($user->role) {'admin' => 'admin.dashboard', 'pengurus' => 'pengurus.dashboard', default => 'warga.dashboard'};
+    $items = $user->isAdmin() ? [
+        'Administrasi' => [['admin.housings.*','admin.housings.index','buildings','Perumahan'],['admin.managers.*','admin.managers.index','person-badge','Pengurus']],
+    ] : ($user->isManager() ? [
+        'Data lingkungan' => [['pengurus.houses.*,pengurus.house-imports.*','pengurus.houses.index','houses','Data Rumah'],['pengurus.residents.*,pengurus.imports.*','pengurus.residents.index','people','Data Warga']],
+        'Keuangan' => [['pengurus.invoices.*','pengurus.invoices.index','receipt','Tagihan'],['pengurus.cash-payments.*','pengurus.cash-payments.index','cash-coin','Pembayaran Cash'],['pengurus.verifications.*','pengurus.verifications.index','patch-check','Verifikasi'],['pengurus.cashflows.*','pengurus.cashflows.index','wallet2','Arus Kas'],['pengurus.payment-accounts.*','pengurus.payment-accounts.index','bank','Rekening'],['pengurus.reports.*','pengurus.reports.index','bar-chart-line','Laporan']],
+        'Informasi' => [['announcements.*,pengurus.announcements.*','announcements.index','megaphone','Pengumuman']],
+    ] : ['Layanan warga' => [['warga.invoices.*','warga.invoices.index','receipt','Tagihan Saya'],['announcements.*','announcements.index','megaphone','Pengumuman']]]);
 @endphp
 @unless($offcanvas)
-<a class="app-brand" href="{{ route($dashboardRoute) }}"><span class="brand-mark"><i class="bi bi-leaf"></i></span><span>EnviroPay</span></a>
+<a class="app-brand" href="{{ route($dashboardRoute) }}"><span class="brand-mark"><i class="bi bi-leaf" aria-hidden="true"></i></span><span>EnviroPay<small>Iuran lingkungan, lebih mudah.</small></span></a>
 @endunless
-<div class="sidebar-label">Menu utama</div>
-<nav class="sidebar-nav nav flex-column">
-    <a class="nav-link {{ request()->routeIs($dashboardRoute) ? 'active' : '' }}" href="{{ route($dashboardRoute) }}"><i class="bi bi-grid"></i>Dashboard</a>
-    @if($user->isAdmin())
-        <a class="nav-link {{ request()->routeIs('admin.housings.*') ? 'active' : '' }}" href="{{ route('admin.housings.index') }}"><i class="bi bi-buildings"></i>Perumahan</a>
-        <a class="nav-link {{ request()->routeIs('admin.managers.*') ? 'active' : '' }}" href="{{ route('admin.managers.index') }}"><i class="bi bi-person-badge"></i>Pengurus</a>
-    @elseif($user->isManager())
-        <a class="nav-link {{ request()->routeIs('pengurus.residents.*') ? 'active' : '' }}" href="{{ route('pengurus.residents.index') }}"><i class="bi bi-people"></i>Warga</a>
-        <a class="nav-link {{ request()->routeIs('pengurus.invoices.*') && !request()->routeIs('pengurus.invoices.verify', 'pengurus.invoices.reject') ? 'active' : '' }}" href="{{ route('pengurus.invoices.index') }}"><i class="bi bi-receipt"></i>Tagihan</a>
-        <a class="nav-link {{ request()->routeIs('pengurus.verifications.*') ? 'active' : '' }}" href="{{ route('pengurus.verifications.index') }}"><i class="bi bi-check2-circle"></i>Verifikasi</a>
-        <a class="nav-link {{ request()->routeIs('pengurus.cashflows.*') ? 'active' : '' }}" href="{{ route('pengurus.cashflows.index') }}"><i class="bi bi-wallet2"></i>Arus Kas</a>
-    @else
-        <a class="nav-link {{ request()->routeIs('warga.invoices.*') ? 'active' : '' }}" href="{{ route('warga.invoices.index') }}"><i class="bi bi-receipt"></i>Tagihan Saya</a>
-    @endif
-    <a class="nav-link {{ request()->routeIs('profile.show') ? 'active' : '' }}" href="{{ route('profile.show') }}"><i class="bi bi-person"></i>Profil</a>
+<div class="sidebar-scroll">
+<nav class="sidebar-nav" aria-label="Navigasi utama">
+    <div class="sidebar-label">Workspace</div>
+    <a class="nav-link {{ request()->routeIs($dashboardRoute) ? 'active' : '' }}" href="{{ route($dashboardRoute) }}" @if(request()->routeIs($dashboardRoute)) aria-current="page" @endif><i class="bi bi-grid-1x2" aria-hidden="true"></i><span>Dashboard</span></a>
+    @foreach($items as $group => $links)
+    <div class="sidebar-label">{{ $group }}</div>
+    @foreach($links as [$patterns,$route,$icon,$label])
+    @php($active = request()->routeIs(...explode(',', $patterns)))
+    <a class="nav-link {{ $active ? 'active' : '' }}" href="{{ $route === 'pengurus.reports.index' ? route($route,'arrears') : route($route) }}" @if($active) aria-current="page" @endif><i class="bi bi-{{ $icon }}" aria-hidden="true"></i><span>{{ $label }}</span></a>
+    @endforeach
+    @endforeach
+    <div class="sidebar-label">Akun</div>
+    <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.show') }}" @if(request()->routeIs('profile.*')) aria-current="page" @endif><i class="bi bi-person-circle" aria-hidden="true"></i><span>Profil & Pengaturan</span></a>
 </nav>
-@unless($offcanvas)
-<div class="sidebar-user">
-    <div class="small fw-semibold text-truncate">{{ $user->name }}</div>
-    <div class="small text-white-50 text-truncate">{{ $user->housing?->name ?? 'Administrator' }}</div>
 </div>
+@unless($offcanvas)
+<div class="sidebar-user"><span class="sidebar-avatar">{{ mb_strtoupper(mb_substr($user->name,0,1)) }}</span><div class="min-w-0"><strong>{{ $user->name }}</strong><small>{{ $user->housing?->name ?? 'Administrator' }}</small></div><span class="sidebar-online" title="Akun aktif"></span></div>
 @endunless

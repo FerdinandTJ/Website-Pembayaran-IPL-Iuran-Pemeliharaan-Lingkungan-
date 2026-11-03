@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Housing;
 use App\Models\User;
+use App\Services\SessionRevoker;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -62,7 +64,13 @@ class ManagerController extends Controller
     public function update(Request $request, User $manager): RedirectResponse
     {
         $this->authorize('update', $manager);
-        $manager->update($this->validated($request, $manager));
+        $data = $this->validated($request, $manager);
+        DB::transaction(function () use ($manager, $data) {
+            $manager->update($data);
+            if (! $manager->is_active || $manager->wasChanged('housing_id')) {
+                app(SessionRevoker::class)->revoke($manager);
+            }
+        });
 
         return redirect()->route('admin.managers.index')->with('success', 'Akun pengurus berhasil diperbarui.');
     }
@@ -70,7 +78,10 @@ class ManagerController extends Controller
     public function destroy(User $manager): RedirectResponse
     {
         $this->authorize('delete', $manager);
-        $manager->update(['is_active' => false]);
+        DB::transaction(function () use ($manager) {
+            $manager->update(['is_active' => false]);
+            app(SessionRevoker::class)->revoke($manager);
+        });
 
         return back()->with('success', 'Akun pengurus dinonaktifkan.');
     }
@@ -79,7 +90,10 @@ class ManagerController extends Controller
     {
         $this->authorize('resetPassword', $manager);
         $data = $request->validate(['password' => ['required', 'string', 'min:8', 'confirmed']]);
-        $manager->update(['password' => $data['password']]);
+        DB::transaction(function () use ($manager, $data) {
+            $manager->update(['password' => $data['password']]);
+            app(SessionRevoker::class)->revoke($manager);
+        });
 
         return back()->with('success', 'Password pengurus berhasil diubah.');
     }

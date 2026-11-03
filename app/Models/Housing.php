@@ -31,4 +31,9 @@ class Housing extends Model
     {
         return $this->hasMany(Cashflow::class);
     }
+
+    public function paymentAccounts(): HasMany
+    {
+        return $this->hasMany(PaymentAccount::class);
+    }
 }

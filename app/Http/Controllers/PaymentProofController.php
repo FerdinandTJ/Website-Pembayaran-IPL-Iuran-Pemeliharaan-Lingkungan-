@@ -16,7 +16,7 @@ class PaymentProofController extends Controller
         return Storage::disk('local')->response(
             $invoice->payment_proof_path,
             'bukti-pembayaran-'.$invoice->id.'.'.pathinfo($invoice->payment_proof_path, PATHINFO_EXTENSION),
-            ['Content-Disposition' => 'inline']
+            ['Content-Disposition' => 'inline', 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, no-store', 'Content-Security-Policy' => "default-src 'none'; sandbox"]
         );
     }
 }

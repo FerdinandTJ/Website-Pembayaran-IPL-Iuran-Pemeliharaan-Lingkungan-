@@ -15,7 +15,8 @@ class Invoice extends Model
     use HasFactory;
 
     protected $fillable = [
-        'housing_id', 'user_id', 'created_by', 'account_number',
+        'house_id', 'house_label', 'payment_method', 'paid_at', 'payment_note',
+        'housing_id', 'user_id', 'created_by', 'title',
         'billing_period', 'due_date', 'total_amount', 'status',
         'payment_proof_path', 'submitted_at', 'verified_at',
         'verified_by', 'rejection_reason',
@@ -26,6 +27,7 @@ class Invoice extends Model
         return [
             'billing_period' => 'date',
             'due_date' => 'date',
+            'paid_at' => 'datetime',
             'submitted_at' => 'datetime',
             'verified_at' => 'datetime',
             'total_amount' => 'decimal:2',
@@ -36,6 +38,21 @@ class Invoice extends Model
     public function scopeForHousing(Builder $query, int $housingId): Builder
     {
         return $query->where('housing_id', $housingId);
+    }
+
+    public function house(): BelongsTo
+    {
+        return $this->belongsTo(House::class);
+    }
+
+    public function receipt(): HasOne
+    {
+        return $this->hasOne(Receipt::class);
+    }
+
+    public function getPaymentLabelAttribute(): string
+    {
+        return $this->status === InvoiceStatus::Verified ? 'Lunas · '.($this->payment_method === 'cash' ? 'Cash' : 'Transfer') : ($this->payment_method === 'transfer' ? 'Transfer' : '—');
     }
 
     public function housing(): BelongsTo

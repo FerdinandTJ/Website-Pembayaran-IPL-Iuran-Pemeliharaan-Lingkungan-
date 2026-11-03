@@ -1,0 +1,10 @@
+# Only public/ is a web entrypoint. Prefer configuring the document root there.
+# Protect the project when it is accidentally placed directly under htdocs.
+Options -Indexes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(?!public(?:/|$)) - [F,L]
+</IfModule>
+<FilesMatch "(?i)^(?:\.env(?:\..*)?|composer\.(?:json|lock)|package(?:-lock)?\.json|artisan|phpunit\.xml|.*\.(?:sqlite|sql|log|bak))$">
+    Require all denied
+</FilesMatch>

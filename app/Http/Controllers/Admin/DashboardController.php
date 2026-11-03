@@ -12,6 +12,7 @@ class DashboardController extends Controller
     public function __invoke(): View
     {
         return view('admin.dashboard', [
+            'recentHousings' => Housing::withCount(['users as residents_count' => fn ($q) => $q->where('role', 'warga')])->latest()->limit(5)->get(),
             'housingCount' => Housing::count(),
             'activeHousingCount' => Housing::where('is_active', true)->count(),
             'managerCount' => User::where('role', 'pengurus')->count(),

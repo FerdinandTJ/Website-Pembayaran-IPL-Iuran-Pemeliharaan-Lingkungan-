@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PushSubscription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,8 +18,8 @@ class AuthController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'identifier' => ['required', 'string'],
-            'password' => ['required', 'string'],
+            'identifier' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'max:128'],
         ]);
 
         $field = filter_var($credentials['identifier'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
@@ -48,6 +49,7 @@ class AuthController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        PushSubscription::where('user_id', $request->user()->id)->where('session_hash', hash('sha256', $request->session()->getId()))->delete();
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

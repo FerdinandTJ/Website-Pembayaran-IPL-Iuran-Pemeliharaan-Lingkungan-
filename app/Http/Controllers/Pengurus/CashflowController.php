@@ -16,7 +16,7 @@ class CashflowController extends Controller
         $income = (clone $base)->where('type', 'income')->sum('total_cashflow');
         $expense = (clone $base)->where('type', 'expense')->sum('total_cashflow');
 
-        $cashflows = $base
+        $cashflows = $base->with('invoice')
             ->when($request->string('search')->toString(), fn ($query, $search) => $query->where('name', 'like', "%{$search}%"))
             ->when($request->filled('type'), fn ($query) => $query->where('type', $request->string('type')))
             ->when($request->filled('source'), fn ($query) => $query->where('source', $request->string('source')))
@@ -61,7 +61,7 @@ class CashflowController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:income,expense'],
-            'total_cashflow' => ['required', 'numeric', 'min:1'],
+            'total_cashflow' => ['required', 'numeric', 'min:1', 'max:9999999999999', 'decimal:0,2'],
         ]);
     }
 }

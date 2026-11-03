@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\House;
 use App\Models\Housing;
+use App\Services\SessionRevoker;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -56,7 +59,15 @@ class HousingController extends Controller
     public function update(Request $request, Housing $housing): RedirectResponse
     {
         $this->authorize('update', $housing);
-        $housing->update($this->validated($request, $housing));
+        $data = $this->validated($request, $housing);
+        DB::transaction(function () use ($housing, $data) {
+            $housing->update($data);
+            if (! $housing->is_active) {
+                foreach ($housing->users()->cursor() as $user) {
+                    app(SessionRevoker::class)->revoke($user);
+                }
+            }
+        });
 
         return redirect()->route('admin.housings.index')->with('success', 'Perumahan berhasil diperbarui.');
     }
@@ -65,7 +76,7 @@ class HousingController extends Controller
     {
         $this->authorize('delete', $housing);
 
-        if ($housing->users()->exists() || $housing->invoices()->exists() || $housing->cashflows()->exists()) {
+        if ($housing->users()->exists() || $housing->invoices()->exists() || $housing->cashflows()->exists() || House::where('housing_id', $housing->id)->exists()) {
             return back()->with('error', 'Perumahan yang memiliki histori tidak dapat dihapus. Nonaktifkan melalui menu edit.');
         }
 

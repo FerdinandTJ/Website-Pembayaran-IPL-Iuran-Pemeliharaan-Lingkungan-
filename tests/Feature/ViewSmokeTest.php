@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use App\Models\Cashflow;
 use App\Models\Housing;
 use App\Models\Invoice;
+use App\Models\PaymentAccount;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -20,9 +21,13 @@ class ViewSmokeTest extends TestCase
         $admin = User::factory()->admin()->create();
         $manager = User::factory()->manager()->create(['housing_id' => $housing->id]);
         $resident = User::factory()->create(['housing_id' => $housing->id]);
+        PaymentAccount::create([
+            'housing_id' => $housing->id, 'bank_name' => 'BCA',
+            'account_number' => '123456789', 'account_holder' => 'Griya Asri',
+        ]);
         $invoice = Invoice::create([
             'housing_id' => $housing->id, 'user_id' => $resident->id, 'created_by' => $manager->id,
-            'account_number' => '123456', 'billing_period' => now()->startOfMonth(),
+            'billing_period' => now()->startOfMonth(),
             'due_date' => now()->addMonth(), 'total_amount' => 100000, 'status' => InvoiceStatus::Unpaid,
         ]);
         $invoice->components()->create(['name' => 'IPL', 'amount' => 100000]);
@@ -41,6 +46,7 @@ class ViewSmokeTest extends TestCase
         foreach ([
             route('pengurus.dashboard'), route('pengurus.residents.index'), route('pengurus.residents.create'),
             route('pengurus.invoices.index'), route('pengurus.invoices.create'),
+            route('pengurus.payment-accounts.index'),
             route('pengurus.verifications.index'), route('pengurus.cashflows.index'), route('profile.show'),
         ] as $url) {
             $this->actingAs($manager)->get($url)->assertOk();
@@ -48,9 +54,14 @@ class ViewSmokeTest extends TestCase
 
         foreach ([
             route('warga.dashboard'), route('warga.invoices.index'),
-            route('warga.invoices.show', $invoice), route('profile.show'),
+            route('profile.show'),
         ] as $url) {
             $this->actingAs($resident)->get($url)->assertOk();
         }
+
+        $this->actingAs($resident)->get(route('warga.invoices.show', $invoice))
+            ->assertOk()
+            ->assertSee('123456789')
+            ->assertSee('BCA');
     }
 }

@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use App\Models\Cashflow;
 use App\Models\Housing;
 use App\Models\Invoice;
+use App\Models\PaymentAccount;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -23,10 +24,15 @@ class BillingWorkflowTest extends TestCase
         $manager = User::factory()->manager()->create(['housing_id' => $housing->id]);
         $resident = User::factory()->create(['housing_id' => $housing->id]);
         User::factory()->inactive()->create(['housing_id' => $housing->id]);
+        $account = PaymentAccount::create([
+            'housing_id' => $housing->id, 'bank_name' => 'BCA',
+            'account_number' => '123456789', 'account_holder' => 'Pengurus Griya Asri',
+        ]);
 
         $payload = [
-            'account_number' => 'BCA 123456789',
+            'title' => 'IPL Bulanan',
             'billing_period' => '2026-07', 'due_date' => '2026-08-10',
+            'recipient_mode' => 'all',
             'components' => [
                 ['name' => 'Kebersihan', 'amount' => 50000],
                 ['name' => 'Keamanan', 'amount' => 75000],
@@ -74,22 +80,46 @@ class BillingWorkflowTest extends TestCase
         ])->assertForbidden();
     }
 
-    public function test_duplicate_period_and_invalid_proof_are_rejected(): void
+    public function test_manager_can_select_recipients_and_send_multiple_invoices_in_same_period(): void
     {
         Storage::fake('local');
         $housing = Housing::create(['name' => 'Griya Asri', 'address' => 'Jl. Hijau']);
         $manager = User::factory()->manager()->create(['housing_id' => $housing->id]);
         $resident = User::factory()->create(['housing_id' => $housing->id]);
+        $secondResident = User::factory()->create(['housing_id' => $housing->id]);
+        $account = PaymentAccount::create([
+            'housing_id' => $housing->id, 'bank_name' => 'BRI',
+            'account_number' => '987654321', 'account_holder' => 'Kas Griya Asri',
+        ]);
         $payload = [
-            'account_number' => '123', 'billing_period' => '2026-07', 'due_date' => '2026-08-10',
+            'title' => 'Tagihan Khusus',
+            'billing_period' => '2026-07', 'due_date' => '2026-08-10',
+            'recipient_mode' => 'selected', 'resident_ids' => [$resident->id],
             'components' => [['name' => 'IPL', 'amount' => 100000]],
         ];
 
-        $this->actingAs($manager)->post(route('pengurus.invoices.store'), $payload)->assertRedirect();
         $this->actingAs($manager)->post(route('pengurus.invoices.store'), $payload)
-            ->assertSessionHasErrors('billing_period');
+            ->assertRedirect(route('pengurus.invoices.index'))
+            ->assertSessionHas('success', 'Tagihan berhasil dikirim kepada 1 warga.');
 
-        $invoice = Invoice::firstOrFail();
+        $this->actingAs($manager)->post(route('pengurus.invoices.store'), [
+            ...$payload,
+            'title' => 'Tagihan Tambahan',
+        ])->assertRedirect(route('pengurus.invoices.index'));
+
+        $this->assertDatabaseCount('invoices', 2);
+        $this->assertSame(2, Invoice::where('user_id', $resident->id)->whereDate('billing_period', '2026-07-01')->count());
+        $this->assertSame(0, Invoice::where('user_id', $secondResident->id)->count());
+
+        $this->actingAs($manager)->post(route('pengurus.invoices.store'), [
+            ...$payload,
+            'title' => 'Tagihan untuk Semua',
+            'recipient_mode' => 'all',
+            'resident_ids' => [],
+        ])->assertSessionHas('success', 'Tagihan berhasil dikirim kepada 2 warga.');
+        $this->assertDatabaseCount('invoices', 4);
+
+        $invoice = Invoice::where('user_id', $resident->id)->firstOrFail();
         $this->actingAs($resident)->post(route('warga.invoices.payment', $invoice), [
             'proof' => UploadedFile::fake()->create('bukti.pdf', 100, 'application/pdf'),
         ])->assertSessionHasErrors('proof');

@@ -1,0 +1,7 @@
+@props(['series'])
+@php($maximum = max(1, collect($series)->max(fn($month) => max($month['income'], $month['expense']))))
+<div class="cash-chart" role="img" aria-label="Grafik pemasukan dan pengeluaran enam bulan terakhir. Angka lengkap tersedia pada tabel setelah grafik.">
+    <div class="chart-plot">@foreach($series as $month)<div class="chart-column"><div class="chart-bars"><span class="chart-bar chart-bar-income" style="height:{{ round($month['income'] / $maximum * 100, 2) }}%" title="{{ $month['period'] }}: pemasukan Rp {{ number_format($month['income'],0,',','.') }}"></span><span class="chart-bar chart-bar-expense" style="height:{{ round($month['expense'] / $maximum * 100, 2) }}%" title="{{ $month['period'] }}: pengeluaran Rp {{ number_format($month['expense'],0,',','.') }}"></span></div><span class="chart-month">{{ $month['label'] }}</span></div>@endforeach</div>
+</div>
+<table class="visually-hidden"><caption>Pemasukan dan pengeluaran enam bulan terakhir</caption><thead><tr><th>Bulan</th><th>Pemasukan</th><th>Pengeluaran</th></tr></thead><tbody>@foreach($series as $month)<tr><th>{{ $month['period'] }}</th><td>Rp {{ number_format($month['income'],0,',','.') }}</td><td>Rp {{ number_format($month['expense'],0,',','.') }}</td></tr>@endforeach</tbody></table>
+@if(collect($series)->sum('income') + collect($series)->sum('expense') == 0)<p class="chart-empty-note">Belum ada transaksi dalam enam bulan terakhir.</p>@endif

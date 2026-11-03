@@ -64,7 +64,7 @@ class HousingIsolationTest extends TestCase
     {
         return Invoice::create([
             'housing_id' => $housing->id, 'user_id' => $resident->id, 'created_by' => $manager->id,
-            'account_number' => '123456', 'billing_period' => now()->startOfMonth(),
+            'billing_period' => now()->startOfMonth(),
             'due_date' => now()->addMonth(), 'total_amount' => 50000, 'status' => $status,
             'submitted_at' => $status === InvoiceStatus::Pending ? now() : null,
         ]);

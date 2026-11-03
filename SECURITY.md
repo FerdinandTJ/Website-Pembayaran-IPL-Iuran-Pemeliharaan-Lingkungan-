@@ -1,223 +1,37 @@
-# Security Policy
+# Pemeriksaan keamanan EnviroPay
 
-## 🔒 Supported Versions
+Tanggal pemeriksaan: 3 November 2026 (Asia/Jakarta).
 
-We release patches for security vulnerabilities in the following versions:
+## Perbaikan
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.2.x   | :white_check_mark: |
-| 1.1.x   | :white_check_mark: |
-| 1.0.x   | :x:                |
+- Menutup akses bukti transfer, profil, dan home untuk akun/perumahan nonaktif, termasuk sesi login lama. Logout tetap diizinkan. Policy tagihan warga juga memeriksa kesesuaian perumahan.
+- Mencabut sesi database dan remember token saat password direset, akun/perumahan dinonaktifkan, atau pengurus dipindahkan. Memeriksa hash password pada sesi terautentikasi untuk mencegah sesi lama hidup kembali setelah reset.
+- Membatasi percobaan login per identitas/IP dan per IP; membatasi operasi password, pratinjau CSV, dan unduhan PDF. Identitas login berbentuk array atau terlalu panjang ditolak tanpa error server.
+- Membatasi ukuran gambar dan dimensinya, menolak file palsu, menyajikan bukti dengan nosniff, sandbox, dan cache private/no-store. Bukti tetap berada pada private storage.
+- Menambahkan batas nominal dan jumlah komponen untuk mencegah overflow dan beban request berlebih. Validasi nominal berada di server, terpisah dari format rupiah di browser.
+- Menambahkan header penolakan framing, pembatasan object/base/form, dan referrer same-origin. Dokumen/halaman pribadi tidak disimpan di cache bersama. Ini bukan CSP penuh yang melarang seluruh inline script.
+- Memaksa debug nonaktif serta cookie Secure/HttpOnly pada mode production; mengirim HSTS pada HTTPS production.
+- Menambahkan pertahanan Apache pada root proyek terhadap akses langsung ke source, database, dan konfigurasi. Document root yang benar tetap harus `public/`.
+- Memperbarui Laravel 11.39.1 ke 12.70.2 dan paket Composer/npm lainnya. Resolusi Composer ditargetkan ke PHP 8.2. Tidak menggunakan pengecualian advisory atau pengabaian pemeriksaan PHP untuk hasil akhir.
 
-## 🚨 Reporting a Vulnerability
+## Bukti pengujian
 
-**Please do not report security vulnerabilities through public GitHub issues.**
+Suite `SecurityHardeningTest` memeriksa akun/perumahan nonaktif, isolasi resource, cache/header bukti, pencabutan sesi, pembatasan tebakan password, input login tidak valid, CSRF dengan bypass testing dimatikan, file gambar palsu, nominal berlebihan, eskalasi role/housing melalui request, dan konfigurasi production.
 
-Instead, please report security vulnerabilities to:
-- **Email**: ferdinandtj4@gmail.com
-- **Subject**: [SECURITY] EnviroPay Vulnerability Report
+Suite lainnya memeriksa akses antarperumahan, akses kuitansi, CSV dan snapshot kuitansi, konsistensi pembayaran/kas, serta rendering teks pengumuman yang mengandung HTML. Pengujian frontend memeriksa bahwa format rupiah tetap mengirim angka mentah.
 
-### What to Include
+Audit awal dependensi menemukan 49 advisory pada 13 paket Composer dan 12 temuan npm. Setelah pembaruan, audit lock file final tidak melaporkan advisory Composer/npm yang diketahui pada waktu pemeriksaan. Hasil ini dapat berubah jika advisory baru diterbitkan; jalankan audit secara berkala.
 
-Please include the following information:
-- Type of issue (e.g. buffer overflow, SQL injection, cross-site scripting, etc.)
-- Full paths of source file(s) related to the manifestation of the issue
-- The location of the affected source code (tag/branch/commit or direct URL)
-- Any special configuration required to reproduce the issue
-- Step-by-step instructions to reproduce the issue
-- Proof-of-concept or exploit code (if possible)
-- Impact of the issue, including how an attacker might exploit it
+## Batas pemeriksaan
 
-### Response Timeline
+Ini adalah review kode, audit dependensi, dan pengujian otomatis lokal, bukan sertifikasi atau jaminan aplikasi bebas celah. Belum dilakukan penetration test pada server production, pemeriksaan konfigurasi Apache/Nginx/TLS/firewall yang sedang berjalan, atau pengujian keamanan menyeluruh melalui browser pada server production. Tampilan lokal telah diperiksa melalui browser pada ukuran desktop dan HP dengan data demo terpisah. Pengujian runtime menggunakan PHP CLI 8.5 dengan lock file yang diselesaikan untuk PHP 8.2; runtime PHP 8.2 dan beban transaksi MySQL paralel belum diuji langsung.
 
-- **Initial Response**: Within 48 hours
-- **Confirmation**: Within 7 days
-- **Fix Development**: Within 30 days (depending on complexity)
-- **Public Disclosure**: After fix is released
+Akun pengurus memang berwenang mencatat penerimaan cash dan mengelola kas manual. Aplikasi tidak dapat membuktikan uang fisik benar-benar diterima. Lindungi akun pengurus dan backup dengan izin akses serta prosedur operasional yang sesuai.
 
-## 🛡️ Security Measures
+## Deployment
 
-### Application Security
+Gunakan document root `public/`, HTTPS, environment production, `SESSION_DRIVER=database`, cache persistent, dan akun database dengan hak minimum yang diperlukan aplikasi. Private storage, `.env`, `.git`, backup, dan database tidak boleh disajikan sebagai file publik. Jangan mengaktifkan Vite development server pada jaringan publik. Ikuti patch keamanan runtime, framework, dependensi, dan sistem operasi setelah deployment.
 
-#### Authentication & Authorization
-- Laravel's built-in authentication system
-- Role-based access control (RBAC)
-- Password hashing with bcrypt
-- Session management with CSRF protection
+## Tambahan Web Push
 
-#### Input Validation
-- Form request validation
-- File upload restrictions (type, size, virus scanning)
-- SQL injection prevention with Eloquent ORM
-- XSS protection with Blade templates
-
-#### Data Protection
-- Encrypted sensitive data in database
-- Secure file storage with proper permissions
-- HTTPS enforcement in production
-- Environment variables for sensitive configuration
-
-### Infrastructure Security
-
-#### Server Configuration
-- Regular security updates
-- Firewall configuration
-- Intrusion detection system
-- Log monitoring and alerting
-
-#### Database Security
-- Database user with minimal privileges
-- Regular backups with encryption
-- Connection encryption (SSL/TLS)
-- Query monitoring for suspicious activity
-
-## 🔧 Security Best Practices
-
-### For Developers
-
-1. **Code Review**
-   - All code changes require review
-   - Security-focused review for sensitive areas
-   - Automated security scanning in CI/CD
-
-2. **Dependencies**
-   - Regular dependency updates
-   - Vulnerability scanning with Composer audit
-   - Use of security-focused packages
-
-3. **Testing**
-   - Security test cases
-   - Penetration testing before releases
-   - Regular security audits
-
-### For Deployment
-
-1. **Environment Configuration**
-   ```env
-   APP_ENV=production
-   APP_DEBUG=false
-   APP_KEY=<strong-32-character-key>
-   ```
-
-2. **Web Server Configuration**
-   - Hide server information
-   - Disable unnecessary modules
-   - Configure proper headers (HSTS, CSP, etc.)
-
-3. **Database Configuration**
-   - Use separate database user
-   - Limit database privileges
-   - Enable query logging
-
-### For Users
-
-1. **Strong Passwords**
-   - Minimum 8 characters
-   - Mix of letters, numbers, and symbols
-   - Regular password changes
-
-2. **Account Security**
-   - Log out after use
-   - Don't share credentials
-   - Report suspicious activity
-
-3. **File Uploads**
-   - Only upload legitimate payment proofs
-   - Scan files before upload
-   - Use trusted devices
-
-## 🚫 Security Anti-Patterns
-
-### What We Avoid
-
-- **Hardcoded Credentials**: All sensitive data in environment variables
-- **SQL Injection**: Using Eloquent ORM and prepared statements
-- **XSS Attacks**: Blade template escaping and input validation
-- **CSRF Attacks**: Laravel's built-in CSRF protection
-- **Insecure File Uploads**: File type validation and virus scanning
-- **Weak Session Management**: Laravel's secure session handling
-
-### Common Vulnerabilities
-
-We actively monitor and protect against:
-- **OWASP Top 10** vulnerabilities
-- **SQL Injection** attacks
-- **Cross-Site Scripting (XSS)**
-- **Cross-Site Request Forgery (CSRF)**
-- **Insecure Direct Object References**
-- **Security Misconfiguration**
-- **Sensitive Data Exposure**
-- **Insufficient Logging & Monitoring**
-
-## 📊 Security Monitoring
-
-### Logging
-- User authentication attempts
-- File upload activities
-- Administrative actions
-- Failed validation attempts
-- Database query errors
-
-### Alerting
-- Multiple failed login attempts
-- Unusual file upload patterns
-- Database connection errors
-- System resource anomalies
-
-### Metrics
-- Login success/failure rates
-- File upload statistics
-- Error rates by endpoint
-- Response time monitoring
-
-## 🔄 Security Updates
-
-### Update Process
-1. Security vulnerability identified
-2. Impact assessment conducted
-3. Fix developed and tested
-4. Security advisory prepared
-5. Fix deployed to production
-6. Users notified of update
-7. Public disclosure (if appropriate)
-
-### Communication
-- **Critical**: Immediate email notification
-- **High**: Email within 24 hours
-- **Medium**: Email within 7 days
-- **Low**: Included in regular updates
-
-## 📞 Security Contact
-
-For security-related questions or concerns:
-
-**Ferdinand TJ**
-- **Email**: ferdinandtj4@gmail.com
-- **PGP Key**: Available upon request
-- **Response Time**: Within 24 hours
-
-### Emergency Contact
-For critical security issues requiring immediate attention:
-- **WhatsApp**: +62 xxx-xxxx-xxxx (for verified security researchers only)
-
-## 🏆 Hall of Fame
-
-We recognize security researchers who help improve EnviroPay's security:
-
-### 2024
-- *No reports yet - be the first!*
-
-### Recognition Program
-- **Critical**: Public recognition + special mention
-- **High**: Public recognition
-- **Medium**: Name in security credits
-- **Low**: Thank you note
-
----
-
-## 🙏 Acknowledgments
-
-We thank the security community for helping keep EnviroPay safe for all users. Your responsible disclosure helps protect thousands of users and their financial data.
-
-**Security is everyone's responsibility. Thank you for helping us maintain a secure application!**
+Web Push menggunakan endpoint/kunci langganan terenkripsi, allowlist provider HTTPS, tanpa redirect, batas langganan per akun, CSRF dan autentikasi, serta pemeriksaan penerima ulang sebelum pengiriman. Kunci VAPID privat disimpan pada private storage atau environment, tidak dikirim ke browser. Pesan layar kunci bersifat umum, navigasi Service Worker dibatasi origin/scope aplikasi, dan tidak ada caching halaman pribadi. Pengiriman memakai outbox transaksional dan retry terbatas; izin browser tidak dapat dipaksakan. Pengujian provider dilakukan memakai mock, termasuk enkripsi/signature protokol nyata tanpa jaringan, bukan pengiriman end-to-end ke HP.

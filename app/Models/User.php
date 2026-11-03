@@ -13,7 +13,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'housing_id', 'name', 'username', 'email', 'phone_number',
+        'housing_id', 'house_id', 'name', 'username', 'email', 'phone_number',
         'house_address', 'role', 'is_active', 'password',
     ];
 
@@ -26,6 +26,11 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'password' => 'hashed',
         ];
+    }
+
+    public function house(): BelongsTo
+    {
+        return $this->belongsTo(House::class);
     }
 
     public function housing(): BelongsTo

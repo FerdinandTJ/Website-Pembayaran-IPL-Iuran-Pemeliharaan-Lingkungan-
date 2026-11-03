@@ -9,13 +9,13 @@ class InvoicePolicy
 {
     public function view(User $user, Invoice $invoice): bool
     {
-        return ($user->isResident() && $invoice->user_id === $user->id)
+        return ($user->isResident() && $invoice->user_id === $user->id && $invoice->housing_id === $user->housing_id)
             || ($user->isManager() && $invoice->housing_id === $user->housing_id);
     }
 
     public function submitPayment(User $user, Invoice $invoice): bool
     {
-        return $user->isResident() && $invoice->user_id === $user->id;
+        return $user->isResident() && $invoice->user_id === $user->id && $invoice->housing_id === $user->housing_id;
     }
 
     public function verify(User $user, Invoice $invoice): bool

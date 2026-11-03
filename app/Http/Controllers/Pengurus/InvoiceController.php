@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Pengurus;
 
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
+use App\Models\House;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\InvoiceNotifier;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -20,7 +23,8 @@ class InvoiceController extends Controller
         $invoices = Invoice::with('resident')
             ->forHousing($request->user()->housing_id)
             ->when($request->string('search')->toString(), fn ($query, $search) => $query
-                ->whereHas('resident', fn ($query) => $query->where('name', 'like', "%{$search}%")))
+                ->where(fn ($query) => $query->where('title', 'like', "%{$search}%")
+                    ->orWhereHas('resident', fn ($query) => $query->where('name', 'like', "%{$search}%"))))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->when($request->filled('period'), fn ($query) => $query->whereDate('billing_period', $request->string('period').'-01'))
             ->latest('billing_period')
@@ -37,20 +41,31 @@ class InvoiceController extends Controller
     public function create(Request $request): View
     {
         return view('pengurus.invoices.create', [
-            'activeResidentCount' => User::where('housing_id', $request->user()->housing_id)
-                ->where('role', 'warga')->where('is_active', true)->count(),
+            'residents' => User::with('house')->where('housing_id', $request->user()->housing_id)
+                ->where('role', 'warga')->where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $housingId = $request->user()->housing_id;
         $data = $request->validate([
-            'account_number' => ['required', 'string', 'max:255'],
+            'apply_house_tariff' => ['sometimes', 'boolean'],
+            'title' => ['required', 'string', 'max:255'],
             'billing_period' => ['required', 'date_format:Y-m'],
             'due_date' => ['required', 'date'],
-            'components' => ['required', 'array', 'min:1'],
+            'recipient_mode' => ['required', 'in:all,selected'],
+            'resident_ids' => ['exclude_unless:recipient_mode,selected', 'required', 'array', 'min:1', 'max:1000'],
+            'resident_ids.*' => [
+                'integer',
+                Rule::exists('users', 'id')->where(fn ($query) => $query
+                    ->where('housing_id', $housingId)
+                    ->where('role', 'warga')
+                    ->where('is_active', true)),
+            ],
+            'components' => ['required', 'array', 'min:1', 'max:50'],
             'components.*.name' => ['required', 'string', 'max:255'],
-            'components.*.amount' => ['required', 'numeric', 'integer', 'min:1000'],
+            'components.*.amount' => ['required', 'numeric', 'integer', 'min:1000', 'max:999999999999'],
         ]);
 
         $period = Carbon::createFromFormat('Y-m', $data['billing_period'])->startOfMonth();
@@ -58,41 +73,73 @@ class InvoiceController extends Controller
             throw ValidationException::withMessages(['due_date' => 'Jatuh tempo tidak boleh sebelum periode tagihan.']);
         }
 
-        $residents = User::where('housing_id', $request->user()->housing_id)
-            ->where('role', 'warga')->where('is_active', true)->get();
+        $recipients = User::with('house')->where('housing_id', $housingId)
+            ->where('role', 'warga')
+            ->where('is_active', true)
+            ->when(
+                $data['recipient_mode'] === 'selected',
+                fn ($query) => $query->whereIn('id', array_unique($data['resident_ids']))
+            )
+            ->get();
 
-        if ($residents->isEmpty()) {
+        if ($recipients->isEmpty()) {
             return back()->withInput()->with('error', 'Belum ada warga aktif yang dapat menerima tagihan.');
-        }
-
-        $duplicateCount = Invoice::whereIn('user_id', $residents->pluck('id'))
-            ->whereDate('billing_period', $period)->count();
-        if ($duplicateCount > 0) {
-            throw ValidationException::withMessages([
-                'billing_period' => 'Sebagian warga sudah memiliki tagihan pada periode ini.',
-            ]);
         }
 
         $total = collect($data['components'])->sum('amount');
 
-        DB::transaction(function () use ($request, $data, $period, $residents, $total) {
-            foreach ($residents as $resident) {
+        if ($total > 9999999999999) {
+            throw ValidationException::withMessages(['components' => 'Total nominal tagihan terlalu besar.']);
+        }
+        $sent = 0;
+        $skipped = 0;
+        DB::transaction(function () use ($request, $data, $period, $recipients, $total, &$sent, &$skipped) {
+            foreach ($recipients as $resident) {
+                $resident = User::lockForUpdate()->findOrFail($resident->id);
+                if (! $resident->is_active) {
+                    $skipped++;
+
+                    continue;
+                }
+                $house = $resident->house_id ? House::lockForUpdate()->findOrFail($resident->house_id) : null;
+                if ($house && $house->responsible_user_id !== $resident->id) {
+                    $skipped++;
+
+                    continue;
+                }
+                $components = $data['components'];
+                $amount = $total;
+                if ($request->boolean('apply_house_tariff', true) && $house?->occupancy === 'vacant') {
+                    if ($house->vacant_billing === 'exempt') {
+                        $skipped++;
+
+                        continue;
+                    }
+                    if ($house->vacant_billing === 'custom') {
+                        $amount = $house->vacant_amount;
+                        $components = [['name' => 'Tarif khusus rumah kosong', 'amount' => $amount]];
+                    }
+                }
                 $invoice = Invoice::create([
+                    'house_id' => $house?->id,
+                    'house_label' => $house?->label ?? $resident->house_address,
                     'housing_id' => $request->user()->housing_id,
                     'user_id' => $resident->id,
                     'created_by' => $request->user()->id,
-                    'account_number' => $data['account_number'],
+                    'title' => $data['title'],
                     'billing_period' => $period,
                     'due_date' => $data['due_date'],
-                    'total_amount' => $total,
+                    'total_amount' => $amount,
                     'status' => InvoiceStatus::Unpaid,
                 ]);
 
-                $invoice->components()->createMany($data['components']);
+                $invoice->components()->createMany($components);
+                $sent++;
+                app(InvoiceNotifier::class)->send($invoice, 'issued');
             }
         });
 
         return redirect()->route('pengurus.invoices.index')
-            ->with('success', "Tagihan berhasil dikirim kepada {$residents->count()} warga.");
+            ->with('success', "Tagihan berhasil dikirim kepada {$sent} warga.".($skipped ? " {$skipped} penerima dilewati sesuai penanggung jawab/tarif rumah." : ''));
     }
 }

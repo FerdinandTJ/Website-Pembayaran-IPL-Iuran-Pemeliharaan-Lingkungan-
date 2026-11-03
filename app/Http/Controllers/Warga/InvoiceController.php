@@ -29,6 +29,11 @@ class InvoiceController extends Controller
     {
         $this->authorize('view', $invoice);
 
-        return view('warga.invoices.show', ['invoice' => $invoice->load('components')]);
+        return view('warga.invoices.show', [
+            'invoice' => $invoice->load([
+                'components',
+                'housing.paymentAccounts' => fn ($query) => $query->where('is_active', true)->orderBy('bank_name'),
+            ]),
+        ]);
     }
 }

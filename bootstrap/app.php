@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\RequireActiveAccount;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\UserAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -12,10 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [SecurityHeaders::class, RequireActiveAccount::class]);
         $middleware->alias([
             'role' => UserAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })->create();
+    })->create()
+    // All configuration is provided in config/ to avoid loading the framework's
+    // legacy MySQL PDO constants on PHP 8.5.
+    ->dontMergeFrameworkConfiguration();
