@@ -39,9 +39,10 @@ class DashboardController extends Controller
             'residentCount' => User::where('housing_id', $housingId)->where('role', 'warga')->where('is_active', true)->count(),
             'pendingCount' => Invoice::forHousing($housingId)->where('status', InvoiceStatus::Pending)->count(),
             'unpaidCount' => Invoice::forHousing($housingId)->whereIn('status', [InvoiceStatus::Unpaid, InvoiceStatus::Rejected])->count(),
-            'pendingInvoices' => Invoice::with('resident')
+            'pendingInvoices' => Invoice::with('resident', 'paymentBatch')
                 ->forHousing($housingId)
                 ->where('status', InvoiceStatus::Pending)
+                ->paymentRepresentatives()
                 ->oldest('submitted_at')
                 ->limit(5)
                 ->get(),

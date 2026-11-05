@@ -15,7 +15,7 @@ class Invoice extends Model
     use HasFactory;
 
     protected $fillable = [
-        'house_id', 'house_label', 'payment_method', 'paid_at', 'payment_note',
+        'payment_batch_id', 'house_id', 'house_label', 'payment_method', 'paid_at', 'payment_note',
         'housing_id', 'user_id', 'created_by', 'title',
         'billing_period', 'due_date', 'total_amount', 'status',
         'payment_proof_path', 'submitted_at', 'verified_at',
@@ -40,9 +40,20 @@ class Invoice extends Model
         return $query->where('housing_id', $housingId);
     }
 
+    public function scopePaymentRepresentatives(Builder $query): Builder
+    {
+        return $query->where(fn ($q) => $q->whereNull('payment_batch_id')
+            ->orWhereRaw('invoices.id = (SELECT MIN(pbi.invoice_id) FROM payment_batch_invoice pbi WHERE pbi.payment_batch_id = invoices.payment_batch_id)'));
+    }
+
     public function house(): BelongsTo
     {
         return $this->belongsTo(House::class);
+    }
+
+    public function paymentBatch(): BelongsTo
+    {
+        return $this->belongsTo(PaymentBatch::class);
     }
 
     public function receipt(): HasOne

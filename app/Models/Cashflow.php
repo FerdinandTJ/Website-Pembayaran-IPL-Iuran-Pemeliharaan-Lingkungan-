@@ -12,7 +12,7 @@ class Cashflow extends Model
     use HasFactory;
 
     protected $fillable = [
-        'housing_id', 'invoice_id', 'created_by', 'name',
+        'payment_batch_id', 'housing_id', 'invoice_id', 'created_by', 'name',
         'type', 'source', 'total_cashflow',
     ];
 

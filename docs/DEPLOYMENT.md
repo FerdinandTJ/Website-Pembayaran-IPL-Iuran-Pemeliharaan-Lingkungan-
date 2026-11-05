@@ -73,6 +73,8 @@ Setelah deploy, periksa login, dashboard, halaman tagihan, dan koneksi scheduler
 
 Migrasi menghubungkan alamat warga lama yang sama persis dalam perumahan yang sama ke satu rumah. Rumah migrasi menggunakan kode sementara `LEGACY-{id}`. Pengurus perlu meninjau kode blok/nomor, kondisi rumah, serta penanggung jawab IPL awal; akun pertama dapat saja nonaktif. Tagihan lama mempertahankan kepemilikan akun dan salinan alamat.
 
+Pembaruan pembayaran gabungan menambahkan tabel histori dan relasi pembayaran melalui migrasi, tanpa mengubah pembayaran lama. Setelah histori gabungan terisi, migrasi ini menolak rollback skema agar catatan keuangan tidak terhapus. Untuk pemulihan versi, gunakan backup database dan source yang konsisten.
+
 Pratinjau impor yang dibuat sebelum perubahan aturan tambah/perbarui perlu diunggah ulang agar pencocokan identitas dan kondisi data dapat diverifikasi.
 
 ## Scheduler

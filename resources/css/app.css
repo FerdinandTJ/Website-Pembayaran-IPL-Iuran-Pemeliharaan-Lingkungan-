@@ -260,3 +260,10 @@ input[data-rupiah] { font-variant-numeric: tabular-nums; }
     .table > :not(caption) > * > * { padding-inline: 15px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+.payment-selection-summary { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; padding:20px; border:1px solid var(--app-border); border-radius:14px; background:#fff; }
+.payment-invoice-item { padding:16px 0; border-bottom:1px solid var(--app-border); overflow-wrap:anywhere; }
+.payment-invoice-item:first-child { padding-top:0; }
+.payment-invoice-item:last-child { border-bottom:0; padding-bottom:0; }
+.list-group-item.active { background:var(--app-primary); border-color:var(--app-primary); }
+@media(max-width:575.98px) { .payment-selection-summary .btn { width:100%; } }

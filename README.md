@@ -37,7 +37,7 @@ Satu instalasi mendukung beberapa perumahan. Akses pengurus dan warga dibatasi k
 | **Rumah & warga** | Tambah manual, impor CSV dengan template dan pratinjau, hubungan akun ke rumah, penanggung jawab IPL, serta histori rumah. |
 | **Kondisi rumah** | Dihuni, Dikontrakkan, Kosong, dan Renovasi sebagai status terpisah; aturan tarif rumah kosong dapat disesuaikan. |
 | **Tagihan IPL** | Komponen biaya, periode, jatuh tempo, penerima semua warga aktif atau warga tertentu, dan beberapa tagihan pada periode yang sama. |
-| **Pembayaran** | Transfer manual dengan unggah bukti dan verifikasi pengurus; penerimaan cash lunas per tagihan. |
+| **Pembayaran** | Transfer manual dan cash, untuk satu atau beberapa tagihan sekaligus; satu bukti dan satu pencatatan kas per pembayaran gabungan. |
 | **Kuitansi** | Nomor tetap, salinan data saat penerbitan, unduh PDF A4, dan cetak dari browser. |
 | **Kas & laporan** | Pemasukan otomatis dari pembayaran, kas manual, laporan tunggakan/tagihan/kas, filter, dan ekspor CSV. |
 | **Pengumuman** | Draft, terbitkan, arsipkan, serta pemberitahuan kepada warga aktif. |
@@ -190,10 +190,10 @@ Contoh: komponen normal **Rp 100.000** dan nominal khusus **Rp 25.000** menghasi
 
 | Metode | Alur |
 | --- | --- |
-| Transfer | Warga transfer ke salah satu rekening aktif, unggah JPG/PNG/WebP maksimal 5 MB, lalu pengurus memverifikasi atau menolak dengan alasan. |
-| Cash | Pengurus memilih warga dan tagihan `unpaid`/`rejected`, lalu mengonfirmasi uang diterima sesuai total tagihan. |
+| Transfer | Warga memilih satu atau beberapa tagihan, transfer sesuai total, unggah satu JPG/PNG/WebP maksimal 5 MB, lalu pengurus memverifikasi atau menolak seluruh pembayaran dengan alasan. |
+| Cash | Pengurus memilih warga dan satu atau beberapa tagihan `unpaid`/`rejected`, meninjau total, lalu mengonfirmasi uang diterima. |
 
-Cash belum mendukung cicilan, nominal sebagian, atau beberapa tagihan dalam satu penerimaan. Tagihan `pending` perlu diproses terlebih dahulu. Pemasukan dari pembayaran tagihan tidak dapat diedit atau dihapus melalui kas manual.
+Transfer dan cash mendukung pemilihan hingga 100 tagihan milik satu warga. Sistem otomatis mencatat satu pilihan sebagai pembayaran biasa, dan dua atau lebih sebagai pembayaran gabungan. Cicilan dan nominal sebagian belum tersedia. Tagihan `pending` perlu diproses terlebih dahulu. Pembayaran gabungan melunasi seluruh pilihan secara atomik, mencatat satu pemasukan kas, serta menerbitkan satu kuitansi berisi rincian per tagihan. Pemasukan dari pembayaran tagihan tidak dapat diedit atau dihapus melalui kas manual.
 
 ## Notifikasi aplikasi dan layar HP
 

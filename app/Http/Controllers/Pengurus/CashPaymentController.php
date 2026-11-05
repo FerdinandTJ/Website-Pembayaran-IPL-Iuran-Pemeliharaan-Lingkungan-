@@ -19,7 +19,7 @@ class CashPaymentController extends Controller
             ->orderBy('name')->paginate(15)->withQueryString();
         $resident = $request->filled('resident_id') ? User::where('housing_id', $request->user()->housing_id)->where('role', 'warga')->findOrFail($request->integer('resident_id')) : null;
         $invoices = $resident ? Invoice::where('housing_id', $request->user()->housing_id)->where('user_id', $resident->id)
-            ->whereIn('status', ['unpaid', 'rejected'])->with('components')->orderBy('due_date')->paginate(10, ['*'], 'invoices_page')->withQueryString() : null;
+            ->whereIn('status', ['unpaid', 'rejected'])->with('components')->orderBy('due_date')->paginate(100, ['*'], 'invoices_page')->withQueryString() : null;
 
         return view('pengurus.cash-payments.index', compact('residents', 'resident', 'invoices'));
     }

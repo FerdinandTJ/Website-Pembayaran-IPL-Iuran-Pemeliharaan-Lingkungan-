@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Warga;
 
-use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use App\Services\InvoiceNotifier;
+use App\Models\PaymentBatch;
+use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Validation\ValidationException;
@@ -32,32 +31,15 @@ class PaymentController extends Controller
             throw ValidationException::withMessages(['proof' => 'Bukti pembayaran gagal disimpan. Silakan coba lagi.']);
         }
         try {
-            $oldPath = DB::transaction(function () use ($invoice, $newPath) {
-                $lockedInvoice = Invoice::lockForUpdate()->findOrFail($invoice->id);
-                $this->authorize('submitPayment', $lockedInvoice);
-                if (! $lockedInvoice->canReceiveProof()) {
-                    throw ValidationException::withMessages(['proof' => 'Tagihan tidak dapat menerima bukti pembayaran saat ini.']);
-                }
-                $oldPath = $lockedInvoice->payment_proof_path;
-                $lockedInvoice->update([
-                    'status' => InvoiceStatus::Pending,
-                    'payment_method' => 'transfer',
-                    'payment_proof_path' => $newPath,
-                    'submitted_at' => now(),
-                    'verified_at' => null,
-                    'verified_by' => null,
-                    'rejection_reason' => null,
-                ]);
-                app(InvoiceNotifier::class)->send($lockedInvoice, 'submitted');
-
-                return $oldPath;
-            });
+            $oldPath = app(PaymentService::class)->submitProof($invoice, $request->user(), $newPath);
         } catch (\Throwable $exception) {
             Storage::disk('local')->delete($newPath);
             throw $exception;
         }
 
-        if ($oldPath && $oldPath !== $newPath) {
+        if ($oldPath && $oldPath !== $newPath
+            && ! Invoice::where('payment_proof_path', $oldPath)->exists()
+            && ! PaymentBatch::where('proof_path', $oldPath)->exists()) {
             Storage::disk('local')->delete($oldPath);
         }
 

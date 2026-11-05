@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\InvoiceStatus;
 use App\Models\Announcement;
 use App\Models\Invoice;
+use App\Models\PaymentBatch;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Validation\Rule;
@@ -65,6 +66,12 @@ class NotificationController extends Controller
     private function destination(Request $request, DatabaseNotification $item): string
     {
         $event = $item->data['event'] ?? '';
+        if (in_array($event, ['batch_submitted', 'batch_verified', 'batch_cash_paid', 'batch_rejected'], true)) {
+            $batch = PaymentBatch::findOrFail($item->data['payment_batch_id'] ?? null);
+            $this->authorize('view', $batch);
+
+            return route('payment-batches.show', $batch);
+        }
         if ($event === 'push_test') {
             return route('notifications.index');
         }

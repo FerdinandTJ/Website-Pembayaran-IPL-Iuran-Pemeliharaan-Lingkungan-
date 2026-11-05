@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Receipt extends Model
 {
-    protected $fillable = ['invoice_id', 'number', 'snapshot'];
+    protected $fillable = ['invoice_id', 'payment_batch_id', 'number', 'snapshot'];
 
     protected function casts(): array
     {

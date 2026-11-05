@@ -6,6 +6,8 @@
 
 Lonceng tersedia untuk pengurus dan warga aktif. Buka lonceng untuk melihat 10 notifikasi terbaru atau **Lihat semua notifikasi** untuk daftar lengkap dan filter belum dibaca. Menekan satu notifikasi menandainya dibaca dan membuka halaman terkait. Notifikasi pengurus dari perumahan sebelumnya tidak dapat diakses setelah ia dipindahkan.
 
+Pembayaran gabungan mengirim satu notifikasi per pembayaran/kejadian kepada tiap penerima, bukan satu notifikasi untuk setiap tagihan anggotanya. Tautan membuka rincian pembayaran gabungan.
+
 Notifikasi database disimpan dalam transaksi yang sama dengan perubahan tagihan/pembayaran, tanpa queue worker. Pengiriman ganda untuk kejadian yang sama dicegah oleh unique key; unggah ulang bukti dihitung sebagai kejadian baru. Pemberitahuan bukti pembayaran dikirim kepada semua pengurus aktif dalam perumahan tersebut. Notifikasi tagihan baru hanya berlaku untuk tagihan yang dibuat setelah fitur dipasang.
 
 Jumlah belum dibaca diperbarui setiap 30 detik ketika tab browser terlihat. Isi dropdown dimuat saat dibuka dan diperbarui selama tetap terbuka. Web Push opsional tersedia melalui pengaturan Profil; tidak menggunakan WebSocket, email, atau WhatsApp.

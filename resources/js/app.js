@@ -1,3 +1,4 @@
+import { setupPaymentSelections } from './payment-selection.js';
 import { setupWebPush } from './web-push.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -9,6 +10,7 @@ window.bootstrap = bootstrap;
 
 document.addEventListener('DOMContentLoaded', () => {
     setupRupiahInputs();
+    setupPaymentSelections();
     document.querySelectorAll('[data-confirm]').forEach((form) => {
         form.addEventListener('submit', (event) => {
             if (! window.confirm(form.dataset.confirm)) {

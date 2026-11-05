@@ -65,9 +65,28 @@ Username/email harus unik di file. Warga lama dicocokkan berdasarkan username at
 
 Satu baris salah menahan seluruh impor. Pratinjau menandai Baru/Perbarui dan hasil konfirmasi menyebut jumlah masing-masing. Konfirmasi memeriksa ulang data akun dan rumah serta menyimpan seluruh batch dalam satu transaksi. Jika data berubah setelah pratinjau atau identitas baru dipakai proses lain, batch dibatalkan dan perlu diunggah ulang. Klik konfirmasi ulang tidak membuat akun ganda. Pratinjau disimpan terenkripsi dengan password yang sudah di-hash, terikat ke pengurus/perumahan, dan kedaluwarsa setelah 30 menit. Setelah selesai, isi batch dihapus. Scheduler membersihkan batch kedaluwarsa setiap hari pukul 02.00 waktu aplikasi.
 
+## Pembayaran Satu atau Beberapa Tagihan
+
+Sistem menentukan jenis pembayaran secara otomatis dari jumlah tagihan yang valid: satu tagihan dicatat melalui pembayaran biasa dengan kuitansi `KW-...`; dua atau lebih dicatat sebagai pembayaran gabungan dengan kuitansi `KWG-...`. Warga dan pengurus cukup memilih tagihan yang ingin dilunasi, tanpa memilih mode tunggal/gabungan.
+
+Warga dapat mencentang tagihan langsung pada **Tagihan Saya**, lalu menekan **Tinjau Pembayaran**. Pilihan pada daftar paginasi berlaku pada halaman tersebut. Tombol **Bayar Tagihan** membuka hingga 100 tagihan yang memenuhi syarat, mulai dari jatuh tempo terlama, termasuk tagihan bulan sebelumnya.
+
+1. Pilih satu atau beberapa tagihan belum dibayar/ditolak milik satu warga dalam perumahan yang sama.
+2. Tinjau rincian dan total yang dihitung server; nominal tidak dapat diketik bebas.
+3. Untuk transfer, kirim uang sesuai total lalu unggah satu bukti. Untuk cash, pengurus mengonfirmasi uang penuh telah diterima.
+4. Seluruh tagihan transfer berubah menjadi menunggu verifikasi. Antrean pengurus menampilkan pembayaran biasa untuk satu tagihan atau satu baris gabungan untuk beberapa tagihan.
+5. Pengurus memeriksa rincian serta total, kemudian memverifikasi atau menolak seluruh pembayaran. Tidak ada keputusan sebagian.
+6. Setelah disahkan, seluruh tagihan pilihan lunas, satu pemasukan kas tercatat, dan kuitansi diterbitkan sesuai jumlah pilihan: `KW-{housing_id}-{invoice_id}` untuk satu tagihan, atau `KWG-{housing_id}-{payment_batch_id}` untuk gabungan.
+
+Tagihan lunas atau menunggu verifikasi tidak dapat dipilih. Maksimal 100 tagihan per pembayaran, dengan total sampai Rp 9.999.999.999.999,99. Server memeriksa ulang kepemilikan, status, nominal, dan keanggotaan saat konfirmasi, serta mengunci tagihan dalam transaksi untuk mencegah pembayaran ganda. Jika total berubah sejak pratinjau, pembayaran tidak disimpan dan pengguna harus meninjau ulang. Bukti yang sudah tersimpan sebelum kegagalan transaksi dibersihkan.
+
+Penolakan mengembalikan seluruh tagihan ke status Ditolak. Warga dapat memilih ulang tagihan dan mengirim bukti baru, baik gabungan maupun per tagihan; percobaan pembayaran sebelumnya beserta buktinya tetap menjadi histori. Catatan pembayaran lama tetap berstatus Ditolak meskipun tagihannya kemudian lunas melalui percobaan lain. Buka tagihan terkait untuk status terkini.
+
+Kuitansi gabungan dapat dibuka dari halaman pembayaran atau dari setiap tagihan anggotanya. Isinya menyimpan rincian per tagihan, periode, alamat, komponen, nominal, metode, dan pengurus verifikator. Salinan tidak berubah ketika data warga/rumah kemudian diperbarui. Pembayaran dan kuitansi per tagihan dari versi lama tetap berlaku.
+
 ## Pembayaran Cash dan Kuitansi
 
-Buka **Pembayaran Cash → pilih warga → pilih tagihan → konfirmasi uang diterima**. Pengurus tidak mengetik ulang nominal. Pembayaran harus lunas per tagihan; cicilan dan pembayaran beberapa tagihan sekaligus belum tersedia. Waktu cash otomatis mengikuti waktu pencatatan, bukan tanggal mundur.
+Buka **Pembayaran Cash → pilih warga → centang satu atau beberapa tagihan → Tinjau Pembayaran → konfirmasi uang diterima**. Pengurus tidak mengetik ulang nominal. Pembayaran harus lunas sesuai total pilihan; cicilan dan pembayaran sebagian belum tersedia. Waktu cash otomatis mengikuti waktu pencatatan, bukan tanggal mundur.
 
 Hanya tagihan `unpaid`/`rejected` yang dapat dibayar cash. Tagihan `pending` harus diproses atau ditolak terlebih dahulu untuk mencegah pembayaran ganda. Akun warga nonaktif yang masih memiliki tagihan dapat dipilih oleh pengurus. Penguncian tagihan, perubahan status, pemasukan kas, kuitansi, dan notifikasi berjalan dalam satu transaksi. Pemasukan dari tagihan tetap terkunci terhadap edit/hapus manual.
 

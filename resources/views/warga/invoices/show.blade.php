@@ -5,6 +5,7 @@
 @section('page-actions')@if($invoice->status->value === 'verified')<a class="btn btn-primary" href="{{ route('receipts.show',$invoice) }}">Kuitansi / Cetak</a> @endif <a class="btn btn-light" href="{{ route('warga.invoices.index') }}"><i class="bi bi-arrow-left me-1"></i>Kembali</a>@endsection
 
 @section('content')
+@if($invoice->payment_batch_id)<div class="alert alert-light border">Tagihan ini terkait <a href="{{ route('payment-batches.show',$invoice->payment_batch_id) }}">pembayaran gabungan #{{ $invoice->payment_batch_id }}</a>. Buka rincian untuk melihat total, bukti, dan keputusan seluruh pembayaran.</div>@endif
 @if($invoice->status->value === 'rejected')
     <div class="alert alert-danger"><div class="fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>Bukti pembayaran ditolak</div><div class="mt-1">{{ $invoice->rejection_reason }}</div><small>Silakan unggah bukti baru yang lebih jelas atau sesuai.</small></div>
 @elseif($invoice->status->value === 'pending')
