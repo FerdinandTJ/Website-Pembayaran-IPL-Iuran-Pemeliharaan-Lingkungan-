@@ -2,10 +2,10 @@
 
 | Atribut | Nilai |
 | --- | --- |
-| Versi dokumen | 1.1 — baseline implementasi, ditinjau ulang |
+| Versi dokumen | 1.2 — halaman error EnviroPay |
 | Tanggal penyusunan | 6 November 2026 |
 | Peninjauan terakhir | 7 November 2026 |
-| Acuan kode | Baseline `1661731` beserta pembaruan pembersihan; seluruh migrasi sampai `2026_11_06_000006` |
+| Acuan kode | Baseline `86e670b` beserta pembaruan halaman error; seluruh migrasi sampai `2026_11_06_000006` |
 | Produk | EnviroPay — pengelolaan Iuran Pemeliharaan Lingkungan |
 | Status | Draf untuk peninjauan kebutuhan dan penyempurnaan bertahap |
 
@@ -104,6 +104,7 @@ Dokumen sudah mencakup keempat tahap sebagai dasar awal. Hasil UAT, angka SLA/ki
 | --- | --- | --- |
 | 1.0 | 6 November 2026 | Baseline kebutuhan, model data, proses dan verifikasi; disesuaikan dengan penghapusan Web Push. |
 | 1.1 | 7 November 2026 | Pisahkan kebutuhan akun, perjelas opsionalitas rumah, lengkapi aliran DFD dan skenario penerimaan, serta catat hasil audit struktur dan diagram. |
+| 1.2 | 7 November 2026 | Tambahkan FR-29/AT-23 untuk halaman error mandiri, pertahankan kontrak JSON/validasi dan verifikasi penyembunyian detail teknis pada HTML. |
 
 ## 9. Pengelolaan perubahan
 

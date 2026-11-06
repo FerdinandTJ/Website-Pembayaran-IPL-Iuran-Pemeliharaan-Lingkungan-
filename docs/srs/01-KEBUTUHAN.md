@@ -57,6 +57,7 @@ Kebutuhan berikut dirumuskan dari jalur kode yang tersedia pada baseline. Status
 | FR-26 | Menyediakan dashboard sesuai peran dan lingkup data. | Admin melihat administrasi, pengurus melihat kondisi lingkungan, warga melihat tagihan sendiri dan transparansi lingkungannya. |
 | FR-27 | Mengubah password sendiri dengan password saat ini dan konfirmasi password baru. | Password baru berbeda, 8–128 karakter; sesi perangkat lain dicabut, sesi saat ini diregenerasi. |
 | FR-28 | Memungkinkan admin mereset password pengurus dan pengurus mereset password warga dalam lingkupnya. | Target sesuai peran/perumahan; password baru dikonfirmasi; sesi target dicabut tanpa menghapus histori akun. |
+| FR-29 | Menampilkan halaman error HTML beridentitas EnviroPay dengan pesan Indonesia dan jalan kembali yang aman. | Mendukung 400/401/403/404/405/408/409/410/413/419/422/429/500/502/503/504 serta fallback 4xx/5xx; kode HTTP dan header protokol tetap; HTML tidak memuat detail exception, tidak memerlukan query database, JavaScript atau build aset. JSON, redirect login dan validasi form tetap mengikuti kontraknya. |
 
 ## 3. Aturan bisnis dan validasi
 

@@ -41,7 +41,7 @@ Satu instalasi mendukung beberapa perumahan. Akses pengurus dan warga dibatasi k
 | **Kas & laporan** | Pemasukan otomatis dari pembayaran, kategori kas manual, laporan pemasukan/pengeluaran/gabungan, rekap per kategori, laporan tunggakan/tagihan, rekap tahunan per rumah, serta ekspor PDF dan CSV sesuai filter. |
 | **Pengumuman** | Draft, terbitkan, arsipkan, serta pemberitahuan kepada warga aktif. |
 | **Notifikasi** | Lonceng, pengingat dan kuitansi teks WhatsApp melalui Fonnte, serta riwayat pengiriman untuk pengurus. |
-| **Akun & antarmuka** | Ubah password sendiri, format nominal rupiah saat mengetik, navigasi per peran, dan tabel ramah HP. |
+| **Akun & antarmuka** | Ubah password sendiri, format nominal rupiah saat mengetik, navigasi per peran, tabel ramah HP, dan halaman error beridentitas EnviroPay. |
 
 ### Hak akses
 

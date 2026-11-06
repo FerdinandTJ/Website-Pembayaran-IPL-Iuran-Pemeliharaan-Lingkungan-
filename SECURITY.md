@@ -45,3 +45,7 @@ Log aktivitas finansial memakai daftar kolom yang diizinkan dan transaksi databa
 ## Pemantauan WhatsApp
 
 Riwayat WhatsApp hanya menyediakan GET untuk pengurus aktif dan dibatasi berdasarkan perumahan, termasuk relasi akun, tagihan dan kuitansi. Pemindahan akun ke perumahan lain tidak mengekspos profil barunya kepada pengurus lama. Nomor tujuan percobaan baru disimpan terenkripsi dan tidak disertakan dalam serialisasi model secara default. Pesan mentah, token dan respons provider tidak disimpan/ditampilkan oleh halaman riwayat. Keterangan kendala memakai pemetaan kode yang diizinkan; kode tak dikenal ditampilkan secara umum. Membaca riwayat tidak memicu API, retry atau perubahan status.
+
+## Halaman error HTML
+
+Exception HTML yang ditangani Laravel memakai halaman EnviroPay mandiri tanpa mengambil data pengguna, query database, aset Vite atau layanan font eksternal. Detail exception/stack trace tidak ditampilkan pada HTML, termasuk saat debug lokal aktif; mekanisme pelaporan Laravel tetap berjalan. Respons JSON, redirect autentikasi dan validasi formulir dipertahankan. Kode HTTP serta header Allow/Retry-After tetap diteruskan; respons error HTML memakai no-store, nosniff, anti-framing dan CSP yang membatasi resource. Verifikasi tersedia pada `tests/Feature/ErrorPagesTest.php`.

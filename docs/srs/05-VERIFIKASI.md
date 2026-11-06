@@ -29,6 +29,7 @@ Referensi menunjukkan lokasi pemeriksaan terkait, bukan jaminan seluruh kalimat 
 | FR-26 | DashboardMetrics dan dashboard controller per peran | DashboardMetricsTest, ViewSmokeTest |
 | FR-27 | ProfileController, SessionRevoker | PaymentsAnnouncementsAndPasswordTest (`test_self_password_change_checks_old_password_ends_other_sessions_and_preserves_login`), SecurityHardeningTest |
 | FR-28 | Admin/ManagerController, Pengurus/ResidentController, SessionRevoker | SecurityHardeningTest (`test_password_reset_revokes_existing_sessions_and_remember_token`); reset pengurus juga perlu AT-18. |
+| FR-29 | bootstrap/app.php, resources/views/errors/page.blade.php dan errors/styles.blade.php | ErrorPagesTest; pratinjau HTML statis pada desktop/HP. |
 | NFR-01–04, NFR-07 | Middleware, policy, transaksi, observer dan private download | HousingIsolationTest, SecurityHardeningTest, BatchPaymentsTest, ManagerWorkflowsTest, WhatsAppHistoryTest |
 | NFR-05 | Blade, CSS, JavaScript dan pagination | ViewSmokeTest dan `tests/Frontend/`; perlu peninjauan visual HP/desktop. |
 | NFR-06 | Carbon, config timezone dan routes/console.php | ReportsTest, AnnualReportsTest, FonnteTest; konfigurasi jam server diperiksa operator. |
@@ -67,6 +68,7 @@ Gunakan lingkungan uji, data fiktif dan nomor milik penguji. Tabel berikut beris
 | AT-20 | Draft, publikasi, coba edit, arsipkan dan buka tautan lama sebagai warga. | Draft ditolak; publikasi memberi notifikasi; yang terbit tidak diedit langsung; arsip tetap dapat diakses sesuai izin. | FR-21 |
 | AT-21 | Buat notifikasi dua akun, tandai satu/semua dibaca; coba ID asing. | Jumlah benar; hanya penerima dapat menandai; tautan tetap diotorisasi. | FR-22 |
 | AT-22 | Dashboard tiga peran dengan data lebih dari satu lingkungan. | Ringkasan sesuai peran; data lingkungan asing tidak tampil; kewajiban warga hanya miliknya. | FR-26 |
+| AT-23 | Buka URL yang tidak ada, akses terlarang, sesi formulir kedaluwarsa, rate limit dan kegagalan server; bandingkan permintaan HTML/JSON. | HTML memakai tampilan EnviroPay tanpa detail exception, respons tetap 4xx/5xx dan header seperti Allow/Retry-After dipertahankan. JSON/validasi form/redirect login tetap; halaman tetap dapat dirender tanpa database atau aset build. | FR-29 |
 
 ## 3. Cara verifikasi teknis
 
@@ -97,7 +99,7 @@ Pemeriksaan dokumen meliputi tautan/anchor, kamus terhadap migration terisolasi,
 | OPEN-02 | Kinerja dan kapasitas | Tetapkan perumahan/akun, tagihan per tahun, pengguna bersamaan, persentil latensi serta skenario load test; rekam hasil runtime target. |
 | OPEN-03 | Ketersediaan dan pemulihan | Sepakati uptime, backup/retensi dan RPO/RTO; simulasikan restore database, APP_KEY dan private storage. |
 | OPEN-04 | Retensi dan privasi | Tetapkan masa simpan data warga, bukti, log/provider dan akses backup. Belum ada hapus otomatis untuk seluruh data bisnis. |
-| OPEN-05 | UAT dan visual | Rekam versi aplikasi, browser/HP, penguji, tanggal, hasil AT-01–22 dan temuan. |
+| OPEN-05 | UAT dan visual | Rekam versi aplikasi, browser/HP, penguji, tanggal, hasil AT-01–23 dan temuan. |
 | OPEN-06 | Database production | Pilih SQLite atau MySQL/MariaDB; periksa tipe, constraint, transaksi/lock dan beban pada mesin pilihan. |
 | OPEN-07 | Fonnte nyata | Rekam hasil uji nomor sendiri, perangkat/kuota, domain dan keterlambatan scheduler tanpa menyimpan token atau isi pesan pribadi. |
 
@@ -116,3 +118,11 @@ Daftar ini adalah pekerjaan spesifikasi/validasi selanjutnya, bukan komitmen fit
 | Pengujian aplikasi | Bukti sesi pembersihan sebelumnya: 152 tes backend, 12 tes frontend dan build berhasil. Suite aplikasi tidak diulang pada audit dokumentasi ini karena kode aplikasi tidak berubah; hasil tersebut tidak dipakai untuk mengklaim kinerja, hasil UAT atau pengiriman WhatsApp nyata. |
 
 Status setelah audit: **baseline teknis ditinjau, masih draf untuk persetujuan kebutuhan**. Penyelesaian OPEN-01–07 memerlukan keputusan pengguna/operator atau pengukuran tersendiri. Tidak ada persentase kepatuhan standar, jaminan bebas bug atau target SLA yang dinyatakan tanpa bukti.
+
+## 6. Verifikasi halaman error — versi 1.2
+
+`ErrorPagesTest` menambahkan 21 kasus: 16 status spesifik, exception tak terduga saat debug aktif, route hilang tanpa migrasi database, header 405/429, kontrak JSON/validasi, serta redirect login. Suite backend setelah perubahan: **173 tes lulus, 1.714 assertion**.
+
+Pratinjau HTML hasil Blade dirender tanpa server aplikasi pada ukuran desktop 1440 px dan HP 320/390 px. Sampel 404, 419, 500, 503 dan 504 diperiksa untuk overflow serta ukuran tombol; contoh 404 desktop dan 419 HP juga diperiksa visual. Ini bukan hasil UAT atau bukti seluruh browser/perangkat.
+
+Penanganan ini berlaku untuk exception HTML yang mencapai Laravel. Error yang dihasilkan lebih dahulu oleh web server/proxy, atau maintenance yang sudah diprerender operator, memerlukan konfigurasi pada lapisan tersebut. Exception tetap mengikuti mekanisme pelaporan Laravel; detail teknis HTML disembunyikan juga saat APP_DEBUG aktif. Pemetaan terkini mencakup 29 FR dan 23 skenario AT; catatan audit versi 1.1 di atas tetap merupakan catatan versi sebelumnya.
