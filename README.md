@@ -276,7 +276,7 @@ php artisan optimize
 php artisan up
 ```
 
-Jalankan `up` setelah semua langkah berhasil. Jangan menjalankan `migrate:fresh` atau membuat ulang kunci pada instalasi berisi data. Migrasi mempertahankan transaksi lama, mengisi tanggal transaksi dari waktu pencatatan, mengategorikan pembayaran tagihan otomatis, dan menandai kas manual lama **Belum Dikategorikan**. Tinjau rumah berkode `LEGACY-{id}` dari migrasi versi lama, termasuk penanggung jawab dan tarifnya.
+Jalankan `up` setelah semua langkah berhasil. Migrasi pembersihan menghapus tabel langganan/antrean Web Push yang sudah tidak digunakan; tabel notifikasi aplikasi dan WhatsApp tetap aktif. Jangan menjalankan `migrate:fresh` atau membuat ulang kunci pada instalasi berisi data. Migrasi mempertahankan transaksi lama, mengisi tanggal transaksi dari waktu pencatatan, mengategorikan pembayaran tagihan otomatis, dan menandai kas manual lama **Belum Dikategorikan**. Tinjau rumah berkode `LEGACY-{id}` dari migrasi versi lama, termasuk penanggung jawab dan tarifnya.
 
 Tambahkan cron setiap menit, sesuaikan path proyek dan PHP:
 
@@ -322,15 +322,15 @@ resources/
 ├── css/                  # Tema dan komponen UI responsif
 ├── js/                   # Interaksi, format rupiah, dan pemilihan pembayaran
 └── views/                # Layout, dashboard, formulir, dan dokumen Blade
-public/service-worker.js  # Menonaktifkan worker Web Push lama
 tests/                    # Pengujian backend dan frontend
-docs/                     # Panduan penggunaan dan gambar dokumentasi
+docs/                     # SRS, panduan penggunaan dan gambar dokumentasi
 ```
 
 ## Dokumentasi lanjutan
 
 | Dokumen | Isi |
 | --- | --- |
+| [Software Requirements Specification](docs/SRS.md) | Kebutuhan sistem, ERD, PDM, kamus data, DFD, alur proses dan kriteria penerimaan. |
 | [Panduan penggunaan](docs/PANDUAN-PENGGUNA.md) | Rumah dan tarif IPL, format CSV, aturan pembaruan, cash, kuitansi, pengumuman, password, dan laporan. |
 | [Keamanan](SECURITY.md) | Kontrol akses, perlindungan data, pemeriksaan dependensi, dan batas audit. |
 

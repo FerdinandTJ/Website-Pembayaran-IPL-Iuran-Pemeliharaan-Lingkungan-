@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="manifest" href="{{ url('/manifest.webmanifest') }}">
     <meta name="theme-color" content="#16784a">
-    <link rel="apple-touch-icon" href="{{ url('/icons/push-192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url('/icons/app-192.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'EnviroPay')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">

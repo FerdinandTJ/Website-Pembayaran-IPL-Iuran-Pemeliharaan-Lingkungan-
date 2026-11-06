@@ -1,3 +1,4 @@
+import { removeRetiredPushWorker } from './browser-cleanup.js';
 import { setupPaymentSelections } from './payment-selection.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -6,6 +7,14 @@ import '../css/app.css';
 import { setupRupiahInputs, rupiahNumber } from './rupiah.js';
 
 window.bootstrap = bootstrap;
+
+const manifestUrl = document.querySelector('link[rel="manifest"]')?.href;
+if (manifestUrl && 'serviceWorker' in navigator) {
+    const retiredWorkerUrl = new URL('./service-worker.js', manifestUrl).href;
+    removeRetiredPushWorker(navigator.serviceWorker, retiredWorkerUrl).catch(() => {
+        // Browser storage restrictions must not prevent the application from loading.
+    });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     setupRupiahInputs();
