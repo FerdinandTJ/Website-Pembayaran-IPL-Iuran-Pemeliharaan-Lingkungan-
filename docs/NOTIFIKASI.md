@@ -1,73 +1,133 @@
-# Notifikasi dan Web Push
+# Notifikasi dan WhatsApp Fonnte
 
 [Kembali ke README](../README.md) · [Panduan penggunaan](PANDUAN-PENGGUNA.md) · [Deployment](DEPLOYMENT.md)
 
-## Notifikasi dan Pengingat
+## Lonceng aplikasi
 
-Lonceng tersedia untuk pengurus dan warga aktif. Buka lonceng untuk melihat 10 notifikasi terbaru atau **Lihat semua notifikasi** untuk daftar lengkap dan filter belum dibaca. Menekan satu notifikasi menandainya dibaca dan membuka halaman terkait. Notifikasi pengurus dari perumahan sebelumnya tidak dapat diakses setelah ia dipindahkan.
+Lonceng tersedia untuk pengurus dan warga aktif. Dropdown menampilkan 10 notifikasi terbaru; **Lihat semua notifikasi** membuka daftar lengkap dan filter belum dibaca. Membuka notifikasi menandainya dibaca dan mengarahkan ke halaman terkait. Akses tetap dibatasi per akun dan perumahan. Pembayaran gabungan menghasilkan satu notifikasi per kejadian, bukan per tagihan anggota.
 
-Pembayaran gabungan mengirim satu notifikasi per pembayaran/kejadian kepada tiap penerima, bukan satu notifikasi untuk setiap tagihan anggotanya. Tautan membuka rincian pembayaran gabungan.
+Notifikasi dan antrean WhatsApp disimpan dalam transaksi database yang sama dengan tagihan. Permintaan ke Fonnte dilakukan oleh scheduler setelah transaksi selesai. Gangguan Fonnte tidak membatalkan pembuatan tagihan atau pembayaran. Jumlah belum dibaca diperbarui setiap 30 detik saat tab terlihat.
 
-Notifikasi database disimpan dalam transaksi yang sama dengan perubahan tagihan/pembayaran, tanpa queue worker. Pengiriman ganda untuk kejadian yang sama dicegah oleh unique key; unggah ulang bukti dihitung sebagai kejadian baru. Pemberitahuan bukti pembayaran dikirim kepada semua pengurus aktif dalam perumahan tersebut. Notifikasi tagihan baru hanya berlaku untuk tagihan yang dibuat setelah fitur dipasang.
+Fitur aktivasi notifikasi layar HP / Web Push telah dihapus. Tidak ada permintaan izin notifikasi browser. Worker lama pada `public/service-worker.js` hanya mencabut langganan dan melepaskan dirinya saat browser memperbaruinya. Tabel push lama dipertahankan untuk kompatibilitas riwayat migrasi, tetapi tidak digunakan untuk pengiriman.
 
-Jumlah belum dibaca diperbarui setiap 30 detik ketika tab browser terlihat. Isi dropdown dimuat saat dibuka dan diperbarui selama tetap terbuka. Web Push opsional tersedia melalui pengaturan Profil; tidak menggunakan WebSocket, email, atau WhatsApp.
+## Persiapan Fonnte
 
-Pengingat otomatis dijadwalkan **setiap hari pukul 08.00 WIB**, pada H-3 dan H+1 jatuh tempo, hanya untuk tagihan `unpaid`/`rejected` milik warga dan perumahan aktif. Setiap jenis pengingat hanya dikirim sekali per tagihan. Pengingat tanggal lampau yang terlewat tidak dikirim ulang secara massal. Tagihan lama dapat menerima pengingat jika jadwalnya sesuai.
+1. Buat akun di [Fonnte](https://fonnte.com/), tambahkan perangkat pengirim dan hubungkan nomor WhatsApp sesuai petunjuk dashboard.
+2. Ambil **token perangkat** dari dashboard Fonnte. Pastikan perangkat terhubung dan paket/kuotanya mendukung pengiriman API.
+3. Isi konfigurasi server pada `.env`:
 
-Untuk development, biarkan proses scheduler berjalan di terminal:
+```dotenv
+FONNTE_ENABLED=true
+FONNTE_TOKEN=token_perangkat_anda
+APP_URL=https://ipl.domain-anda.id
+```
+
+Token hanya disimpan pada server. Jangan masukkan `.env` ke Git atau mengirim token melalui chat. Satu instalasi memakai satu token/nomor pengirim untuk seluruh perumahan. `FONNTE_ENABLED=false` menonaktifkan pembuatan dan pengiriman antrean WhatsApp; lonceng aplikasi tetap berjalan. Tagihan yang diterbitkan saat WhatsApp belum aktif tidak dikirim retroaktif.
+
+4. Terapkan pembaruan dan jalankan scheduler:
 
 ```bash
+php artisan config:clear
+php artisan migrate
+npm run build
 php artisan schedule:work
 ```
 
-Untuk production, tambahkan cron yang menjalankan scheduler setiap menit. Ganti `/path/to/project` dan `/path/to/php` dengan lokasi deployment dan PHP CLI yang dipakai:
+Pada production, gunakan `php artisan config:cache` setelah konfigurasi diubah dan gunakan cron berikut sebagai pengganti `schedule:work` (sesuaikan path):
 
 ```cron
 * * * * * cd /path/to/project && /path/to/php artisan schedule:run >> /path/to/project/storage/logs/scheduler.log 2>&1
 ```
 
-Verifikasi jadwal dan jalankan pemeriksaan pengingat secara manual bila diperlukan:
+Nomor WhatsApp warga diisi pengurus melalui **Data Warga**, atau kolom `phone_number` pada impor CSV. Gunakan format `081234567890`, `6281234567890`, atau `+6281234567890`. Spasi, tanda hubung, titik dan kurung dinormalisasi. Hanya satu nomor seluler Indonesia per warga yang diterima; daftar nomor, ID grup, dan sintaks variabel Fonnte ditolak. Nomor kosong/tidak valid dilewati dan dicatat sebagai `invalid_phone`.
+
+Server lokal dapat menghubungi Fonnte selama terhubung internet. Tautan tagihan harus memakai `APP_URL` yang dapat dibuka warga; localhost di HP warga tidak menunjuk ke komputer server. Untuk pengingat otomatis, komputer/server dan scheduler perlu terus berjalan.
+
+## Waktu dan isi pesan
+
+WhatsApp dikirim hanya untuk:
+
+- Tagihan baru (`issued`).
+- H-3 sebelum jatuh tempo (`due_soon`).
+- H+1 setelah jatuh tempo (`overdue`).
+- Kuitansi pembayaran setelah transfer diverifikasi (`verified`) atau cash diterima (`cash_paid`), termasuk satu kuitansi untuk satu pembayaran gabungan (`batch_verified`/`batch_cash_paid`).
+
+Pemeriksaan pengingat berjalan **pukul 08.00 WIB** setiap hari. Antrean pengiriman diproses **setiap menit**, maksimal 20 pesan per eksekusi bawaan, sehingga pengiriman bisa tertunda saat antrean besar. Pesan mencantumkan nama warga, perumahan, judul, periode, nominal, tanggal jatuh tempo dan tautan tagihan yang memerlukan login. Kuitansi dikirim sebagai pesan teks dengan format WhatsApp, tanpa lampiran. Nomor kuitansi, nama, alamat, rincian, total, metode, waktu konfirmasi WIB, catatan dan pengurus diambil dari snapshot kuitansi yang diterbitkan saat pembayaran disahkan. Satu kuitansi hanya memiliki satu antrean, termasuk pembayaran gabungan. Perubahan data setelah penerbitan tidak mengubah isi kuitansi. Tautan mengarah ke halaman kuitansi yang memerlukan login. Unggah bukti yang belum diverifikasi, penolakan pembayaran, pengumuman, dan kejadian lain tetap memakai lonceng aplikasi.
+
+Untuk pengingat, hanya tagihan `unpaid`/`rejected` milik warga dan perumahan aktif yang memenuhi syarat. Kuitansi hanya dikirim untuk pembayaran `verified` yang memiliki kuitansi terbit dan tetap dimiliki penerima dalam perumahan yang sama. Pengirim memeriksa kembali kepemilikan, status tagihan, akun dan perumahan sebelum menghubungi Fonnte. Pengingat untuk tagihan lunas atau menunggu verifikasi, serta perubahan tanggal jatuh tempo, dilewati. Semua antrean berumur lebih dari satu hari dilewati. Kuitansi pembayaran lama sebelum fitur diaktifkan tidak dikirim secara retroaktif. Pengingat tanggal lampau yang terlewat tidak dikirim susulan secara massal. Setiap kejadian dideduplikasi; menjalankan pemeriksaan berulang tidak membuat pesan baru untuk kejadian yang sama.
+
+## Pemeriksaan dan uji pengiriman
+
+Periksa jadwal:
 
 ```bash
 php artisan schedule:list
+```
+
+Untuk uji end-to-end, buat satu akun warga dengan nomor WhatsApp uji milik Anda, lalu terbitkan satu tagihan hanya untuk akun itu. Setelah itu proses antrean:
+
+```bash
+php artisan app:send-whatsapp --limit=1
+```
+
+Perintah ini mengirim pesan nyata ke antrean tertua yang memenuhi syarat. Gunakan database uji terpisah bila sudah ada antrean warga lain. Untuk menguji kuitansi, verifikasi pembayaran transfer akun uji atau catat pembayaran cash, lalu jalankan perintah pengiriman yang sama. Jangan menggunakan pembayaran warga nyata sebagai percobaan.
+
+Untuk memproses pengingat yang sesuai tanggal hari ini secara manual:
+
+```bash
 php artisan app:send-invoice-reminders
+php artisan app:send-whatsapp
 ```
 
-Perintah manual mengirim pengingat nyata yang sesuai tanggal hari ini; aman diulang karena deduplikasi. Periksa `storage/logs/laravel.log` dan output scheduler jika pengingat gagal. Pastikan proses scheduler memakai konfigurasi database yang sama dengan aplikasi web. Backup database dan private storage secara berkala.
+Perintah pengiriman menampilkan ringkasan status. Riwayat teknis ada pada tabel `whatsapp_deliveries`, tanpa menyimpan token, isi pesan atau respons mentah provider:
 
-## Notifikasi Layar HP / Web Push
+| Status | Makna |
+| --- | --- |
+| `pending` | Menunggu pengiriman atau waktu percobaan ulang. |
+| `processing` | Sedang diproses oleh satu pengirim. |
+| `accepted` | API Fonnte menerima permintaan; belum membuktikan pesan sampai/dibaca warga. |
+| `skipped` | Tidak memenuhi syarat, nomor salah, atau antrean kedaluwarsa. |
+| `failed` | Kesalahan HTTP 4xx permanen atau batas percobaan tercapai. |
+| `uncertain` | Timeout, respons tidak jelas, HTTP 5xx, atau proses pengirim terputus. Periksa riwayat di dashboard Fonnte sebelum tindakan lanjutan. |
 
-Fitur Web Push mengirim pemberitahuan sistem ke perangkat yang memberikan izin, terpisah dari lonceng dalam aplikasi. Profil menyediakan **Aktifkan Notifikasi Perangkat**, **Nonaktifkan di Perangkat Ini**, dan **Kirim Notifikasi Uji**. Lonceng memiliki tautan ke pengaturan tersebut. Tidak ada dialog izin otomatis saat membuka aplikasi; browser meminta izin setelah pengguna menekan tombol aktifkan.
+Penolakan eksplisit dari provider (`status=false`) dan HTTP 429 dicoba ulang dengan jeda bertambah, maksimal 5 percobaan. Timeout/hasil tidak pasti tidak dikirim ulang otomatis untuk mengurangi risiko pesan ganda, karena Fonnte mungkin sudah menerima permintaan. Token salah, perangkat terputus, dan kuota habis perlu diperiksa melalui dashboard Fonnte. Setelah memperbaiki nomor/konfigurasi, operator dapat meninjau record gagal sebelum menyiapkan pengiriman ulang; tidak ada tombol kirim ulang massal.
 
-Persiapan server:
+Integrasi mengikuti [API pengiriman Fonnte](https://docs.fonnte.com/api-send-message/): form POST ke `https://api.fonnte.com/send`, header `Authorization` berisi token langsung tanpa `Bearer`. Pengujian otomatis memalsukan respons API, termasuk deduplikasi, rollback, status tagihan, isolasi perumahan, nomor, retry, dan timeout. Pengiriman nyata perlu diuji dengan akun/perangkat Fonnte Anda.
 
-```bash
-composer install
-php artisan migrate --force
-php artisan app:web-push-keys
-npm run build
-php artisan schedule:work
+## Contoh format kuitansi WhatsApp
+
+Contoh berikut menggunakan data fiktif. WhatsApp menampilkan teks di antara tanda `*` sebagai huruf tebal. Susunan vertikal menjaga pesan mudah dibaca pada layar HP tanpa tabel dengan spasi perataan.
+
+```text
+*KUITANSI PEMBAYARAN IPL*
+Perumahan Melati
+────────────────────
+No. kuitansi: KW-1-12
+Tanggal: 06/11/2026 09:30 WIB
+Status: *LUNAS*
+
+*DITERIMA DARI*
+Budi Santoso
+Rumah: A-01
+
+*RINCIAN PEMBAYARAN*
+IPL November
+Periode: November 2026
+• Keamanan: Rp 100.000
+• Kebersihan: Rp 50.000
+
+────────────────────
+*TOTAL DIBAYAR*
+*Rp 150.000*
+
+Metode: Transfer Bank
+Dikonfirmasi oleh: Pengurus Melati
+
+*LIHAT KUITANSI*
+https://ipl.domain-anda.id/invoices/12/receipt
+
+Pembayaran telah diterima dan dicatat.
+Terima kasih atas partisipasi Anda dalam menjaga lingkungan.
+
+_Kuitansi elektronik diterbitkan oleh EnviroPay._
 ```
-
-Pada production gunakan cron scheduler yang sudah didokumentasikan di atas. Pengiriman antrean berjalan setiap menit, sehingga biasanya ada jeda sekitar satu menit sebelum provider menerima permintaan. Tidak membutuhkan queue worker tambahan. Untuk memproses antrean secara manual:
-
-```bash
-php artisan app:send-web-push
-```
-
-Set `WEB_PUSH_VAPID_SUBJECT` ke alamat kontak operator, misalnya `mailto:pengurus@domain-anda.id`. Perintah pembuat kunci menyimpan pasangan VAPID pada `storage/app/private/web-push/vapid.json` dengan izin file 0600 dan tidak mencetak kunci privat. Pastikan user proses web/scheduler dapat membacanya. Perintah bersifat idempotent dan tidak mengganti kunci yang sudah ada. Alternatifnya gunakan pasangan `WEB_PUSH_VAPID_PUBLIC_KEY`/`WEB_PUSH_VAPID_PRIVATE_KEY` melalui environment deployment. Backup kunci bersama private storage; jangan memasukkannya ke Git atau mengganti pasangan tanpa rencana pendaftaran ulang perangkat.
-
-Syarat perangkat:
-
-- Akses HP harus melalui HTTPS. `http://localhost`/loopback hanya berguna untuk development pada perangkat yang menjalankan server; `http://192.168...` dari HP bukan secure context.
-- Android/desktop: browser yang menyediakan Service Worker, Push API, dan Notifications API. Jika tidak didukung, pengaturan menampilkan penjelasan.
-- iPhone/iPad iOS/iPadOS 16.4+: tambahkan situs ke Home Screen melalui Bagikan Safari, buka dari ikon aplikasi, lalu aktifkan notifikasi. Manifest dan ikon aplikasi sudah tersedia.
-- Izin yang ditolak harus diubah melalui pengaturan browser/sistem; aplikasi tidak dapat memaksanya.
-
-Notifikasi baru untuk tagihan, bukti transfer, hasil verifikasi, cash, pengingat, serta pengumuman membuat antrean push bagi perangkat terdaftar. Antrean disimpan dalam transaksi database yang sama dengan notifikasi; kegagalan provider tidak membatalkan pembayaran. Notifikasi lama sebelum perangkat diaktifkan tidak dikirim secara retroaktif. Pesan di layar kunci bersifat umum tanpa nama warga, nominal, atau isi pengumuman. Ketukan membuka pusat notifikasi dengan autentikasi dan policy normal.
-
-Langganan disimpan terenkripsi dan terikat ke akun/perumahan. Endpoint dibatasi ke layanan push browser yang diizinkan, HTTPS/443, tanpa userinfo/fragment; redirect HTTP keluar dimatikan untuk membatasi SSRF. Kunci langganan divalidasi, jumlah perangkat dibatasi 10 per akun, dan endpoint akun lain tidak dapat diambil alih. Data endpoint/kunci tidak dicetak pada log. Opt-out menghapus langganan perangkat dan antreannya; logout menghapus langganan sesi perangkat tersebut. Reset password/penonaktifan akun/perumahan mencabut langganan bersama sesi terkait. Masa kedaluwarsa sesi login sendiri tidak otomatis menghentikan langganan, sehingga push tetap dapat diterima ketika aplikasi lama ditutup.
-
-Pengirim memeriksa kembali status akun/perumahan dan kepemilikan sebelum mengirim, menghapus langganan 404/410, serta mencoba ulang kegagalan sementara dengan jeda bertambah (maksimal 5 percobaan, umur antrean maksimal satu hari). Antrean lama dibersihkan setelah 7 hari. Satu notifikasi/perangkat memiliki satu record dan tag tetap; percobaan ulang masih dapat terjadi jika proses berhenti setelah provider menerima permintaan. Keberhasilan provider berarti diterima untuk diproses, bukan bukti bahwa HP menampilkannya. Koneksi, mode hemat daya, Focus/Do Not Disturb, atau penghentian browser oleh OS dapat menunda atau mencegah tampilan.
-
-Pengujian otomatis memalsukan respons provider: pengujian backend menguji registrasi, isolasi, opt-out/logout, deduplikasi/rollback, retry, dan enkripsi/signature VAPID; pengujian frontend menguji pembatasan navigasi Service Worker serta teks layar kunci. Pengiriman end-to-end pada HP dan izin browser pengguna harus diuji pada situs HTTPS nyata. Service Worker tidak melakukan caching halaman atau dokumen pribadi.

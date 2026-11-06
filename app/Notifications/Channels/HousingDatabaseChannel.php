@@ -3,7 +3,7 @@
 namespace App\Notifications\Channels;
 
 use App\Notifications\HousingNotification;
-use App\Services\PushOutbox;
+use App\Services\WhatsAppOutbox;
 use Illuminate\Notifications\Channels\DatabaseChannel;
 use Illuminate\Notifications\Notification;
 
@@ -22,7 +22,7 @@ class HousingDatabaseChannel extends DatabaseChannel
             'read_at' => null,
         ]);
         if ($stored->wasRecentlyCreated) {
-            app(PushOutbox::class)->enqueue($notifiable, $stored);
+            app(WhatsAppOutbox::class)->enqueue($notifiable, $stored);
         }
 
         return $stored;

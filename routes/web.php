@@ -20,7 +20,6 @@ use App\Http\Controllers\Pengurus\ResidentController;
 use App\Http\Controllers\Pengurus\ResidentImportController;
 use App\Http\Controllers\Pengurus\VerificationController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\Warga\DashboardController as ResidentDashboardController;
 use App\Http\Controllers\Warga\InvoiceController as ResidentInvoiceController;
@@ -42,11 +41,6 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::middleware('role:pengurus,warga')->group(function () {
         Route::get('/payment-batches/{paymentBatch}', [PaymentBatchController::class, 'show'])->name('payment-batches.show');
         Route::get('/payment-batches/{paymentBatch}/proof', [PaymentBatchController::class, 'proof'])->name('payment-batches.proof');
-        Route::get('/push/config', [PushSubscriptionController::class, 'config'])->name('push.config');
-        Route::post('/push/status', [PushSubscriptionController::class, 'status'])->middleware('throttle:documents')->name('push.status');
-        Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store'])->middleware('throttle:sensitive')->name('push.store');
-        Route::delete('/push/subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push.destroy');
-        Route::post('/push/test', [PushSubscriptionController::class, 'test'])->middleware('throttle:sensitive')->name('push.test');
         Route::get('/invoices/{invoice}/receipt', [ReceiptController::class, 'show'])->name('receipts.show');
         Route::get('/invoices/{invoice}/receipt.pdf', [ReceiptController::class, 'pdf'])->middleware('throttle:documents')->name('receipts.pdf');
         Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');

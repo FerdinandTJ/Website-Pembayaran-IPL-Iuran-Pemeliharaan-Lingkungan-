@@ -6,6 +6,5 @@
         <div class="d-flex align-items-center justify-content-between gap-2 px-3 py-2 border-bottom"><strong>Notifikasi</strong><button class="btn btn-link btn-sm p-0" data-notification-read-all>Tandai semua dibaca</button></div>
         <div class="notification-items" data-notification-items><p class="text-secondary p-3 mb-0">Buka untuk memuat notifikasi.</p></div>
         <a class="dropdown-item text-center border-top py-3" href="{{ route('notifications.index') }}">Lihat semua notifikasi</a>
-        <a class="dropdown-item text-center py-2 small" href="{{ route('profile.show') }}#notifikasi-perangkat">Aktifkan notifikasi layar HP</a>
     </div>
 </div>

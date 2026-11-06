@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\HouseImport;
-use App\Models\PushDelivery;
 use App\Models\ResidentImport;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -16,7 +15,6 @@ Schedule::command('app:send-invoice-reminders')
 
 Schedule::call(fn () => ResidentImport::where('expires_at', '<', now())->delete())->dailyAt('02:00')->name('cleanup-resident-imports')->withoutOverlapping();
 
-Schedule::command('app:send-web-push')->everyMinute()->withoutOverlapping(10);
-Schedule::call(fn () => PushDelivery::where('updated_at', '<', now()->subDays(7))->delete())->dailyAt('02:15')->name('cleanup-push-deliveries')->withoutOverlapping();
-
 Schedule::call(fn () => HouseImport::where('expires_at', '<', now())->delete())->dailyAt('02:05')->name('cleanup-house-imports')->withoutOverlapping();
+
+Schedule::command('app:send-whatsapp')->everyMinute()->withoutOverlapping(10);

@@ -38,10 +38,10 @@ Satu instalasi mendukung beberapa perumahan. Akses pengurus dan warga dibatasi k
 | **Kondisi rumah** | Dihuni, Dikontrakkan, Kosong, dan Renovasi sebagai status terpisah; aturan tarif rumah kosong dapat disesuaikan. |
 | **Tagihan IPL** | Komponen biaya, periode, jatuh tempo, penerima semua warga aktif atau warga tertentu, dan beberapa tagihan pada periode yang sama. |
 | **Pembayaran** | Transfer manual dan cash, untuk satu atau beberapa tagihan sekaligus; satu bukti dan satu pencatatan kas per pembayaran gabungan. |
-| **Kuitansi** | Nomor tetap, salinan data saat penerbitan, unduh PDF A4, dan cetak dari browser. |
+| **Kuitansi** | Nomor tetap, salinan data saat penerbitan, kuitansi teks WhatsApp untuk transfer dan tunai, serta unduh PDF A4/cetak dari browser. |
 | **Kas & laporan** | Pemasukan otomatis dari pembayaran, kas manual, laporan tunggakan/tagihan/kas, filter, dan ekspor CSV. |
 | **Pengumuman** | Draft, terbitkan, arsipkan, serta pemberitahuan kepada warga aktif. |
-| **Notifikasi** | Lonceng dalam aplikasi, pengingat jatuh tempo otomatis, dan Web Push opsional ke perangkat yang memberikan izin. |
+| **Notifikasi** | Lonceng dalam aplikasi, pengingat jatuh tempo otomatis, dan WhatsApp melalui Fonnte. |
 | **Akun & antarmuka** | Ubah password sendiri, format nominal rupiah saat mengetik, navigasi per peran, dan tabel ramah HP. |
 
 ### Hak akses
@@ -78,7 +78,7 @@ Transfer yang ditolak dapat diunggah ulang. Pembayaran cash langsung terverifika
 | Frontend | Blade, Bootstrap 5, Bootstrap Icons, JavaScript, dan Vite 6 |
 | Database | SQLite untuk mulai lokal; MySQL/MariaDB dapat dikonfigurasi |
 | Dokumen | Dompdf untuk kuitansi PDF |
-| Notifikasi | Database notifications, Laravel Scheduler, Service Worker, dan Web Push VAPID |
+| Notifikasi | Database notifications, Laravel Scheduler, dan API WhatsApp Fonnte |
 | Pengujian | PHPUnit dengan SQLite in-memory dan Node.js test runner |
 
 ## Instalasi lokal
@@ -102,7 +102,7 @@ php artisan key:generate
 
 ### 3. Atur database
 
-Konfigurasi contoh menggunakan SQLite. Untuk instalasi baru, buat file databasenya jika belum tersedia:
+Aplikasi dapat berjalan tanpa XAMPP menggunakan PHP CLI dan SQLite. Konfigurasi contoh menggunakan SQLite. Untuk instalasi baru, buat file databasenya jika belum tersedia:
 
 ```bash
 php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
@@ -153,7 +153,7 @@ php artisan serve
 
 Buka **http://127.0.0.1:8000**, masuk sebagai admin, buat perumahan dan pengurus, lalu lanjutkan pendataan dari akun pengurus.
 
-Untuk pengembangan frontend, jalankan `npm run dev` di terminal lain. Jalankan `php artisan schedule:work` di terminal terpisah jika ingin mengaktifkan pengingat, pengiriman Web Push, dan pembersihan data sementara.
+Untuk pengembangan frontend, jalankan `npm run dev` di terminal lain. Jalankan `php artisan schedule:work` di terminal terpisah jika ingin mengaktifkan pengingat, pengiriman WhatsApp, dan pembersihan data sementara.
 
 > Sudah memiliki data? Gunakan `php artisan migrate` untuk pembaruan. `migrate:fresh` menghapus seluruh tabel dan tidak diperlukan untuk instalasi ini.
 
@@ -195,18 +195,58 @@ Contoh: komponen normal **Rp 100.000** dan nominal khusus **Rp 25.000** menghasi
 
 Transfer dan cash mendukung pemilihan hingga 100 tagihan milik satu warga. Sistem otomatis mencatat satu pilihan sebagai pembayaran biasa, dan dua atau lebih sebagai pembayaran gabungan. Cicilan dan nominal sebagian belum tersedia. Tagihan `pending` perlu diproses terlebih dahulu. Pembayaran gabungan melunasi seluruh pilihan secara atomik, mencatat satu pemasukan kas, serta menerbitkan satu kuitansi berisi rincian per tagihan. Pemasukan dari pembayaran tagihan tidak dapat diedit atau dihapus melalui kas manual.
 
-## Notifikasi aplikasi dan layar HP
+## Notifikasi aplikasi dan WhatsApp
 
 **Lonceng aplikasi** menyimpan pemberitahuan tagihan, hasil verifikasi, pembayaran, pengumuman, dan pengingat. Jumlah belum dibaca diperbarui setiap 30 detik saat tab terlihat.
 
-**Web Push** bersifat opsional dan dapat memunculkan notifikasi sistem meskipun tab aplikasi ditutup, sesuai dukungan browser/OS dan kondisi perangkat. Pengguna mengaktifkannya melalui **Profil → Notifikasi Perangkat** setelah server dikonfigurasi.
+**WhatsApp Fonnte** mengirim pesan sesuai kejadian berikut:
 
-- Perangkat memerlukan HTTPS dan izin notifikasi.
-- iPhone/iPad dengan iOS/iPadOS 16.4+ memerlukan aplikasi ditambahkan ke Home Screen.
-- Pengingat tagihan berjalan setiap **08.00 WIB**, pada **H-3** dan **H+1** jatuh tempo.
-- Pengiriman Web Push diproses scheduler setiap menit; pesan layar kunci tidak memuat nama atau nominal.
+| Kejadian | Pesan kepada warga |
+| --- | --- |
+| Tagihan baru diterbitkan | Rincian tagihan, nominal, jatuh tempo, dan tautan untuk melihat tagihan serta mengunggah bukti pembayaran. |
+| H-3 sebelum jatuh tempo | Pengingat pembayaran untuk tagihan yang belum lunas atau bukti pembayarannya ditolak. |
+| H+1 setelah jatuh tempo | Pengingat tunggakan untuk tagihan yang belum lunas atau bukti pembayarannya ditolak. |
+| Transfer disetujui pengurus | Kuitansi teks dengan status **LUNAS** dan metode **Transfer Bank**. |
+| Pengurus mengonfirmasi uang tunai diterima | Kuitansi teks dengan status **LUNAS** dan metode **Tunai / Cash**. |
+| Pembayaran gabungan disahkan | Satu kuitansi teks berisi seluruh tagihan yang dibayar, untuk transfer maupun tunai. |
 
-Lihat [panduan notifikasi dan Web Push](docs/NOTIFIKASI.md) untuk kunci VAPID, scheduler, pengujian perangkat, dan penanganan kegagalan.
+Kuitansi WhatsApp memakai judul tebal, nomor kuitansi, nama warga, rumah, rincian pembayaran, total, waktu konfirmasi WIB, nama pengurus, dan tautan kuitansi. Isinya mengikuti salinan data saat kuitansi diterbitkan. WhatsApp mengirim **pesan teks tanpa lampiran PDF**; fitur unduh PDF dan cetak tetap tersedia di aplikasi.
+
+Pemeriksaan pengingat berjalan setiap hari pukul **08.00 WIB**. Antrean pengiriman diproses **setiap menit** saat scheduler aktif, maksimal 20 pesan per eksekusi bawaan. Akun dan perumahan penerima harus aktif serta nomor WhatsApp warga harus valid. Tagihan lunas atau menunggu verifikasi tidak mendapat pengingat pembayaran. Setiap kejadian dideduplikasi, dan satu kuitansi hanya memiliki satu antrean pengiriman. Status diterima API Fonnte belum membuktikan pesan sampai atau dibaca warga.
+
+### Mengaktifkan WhatsApp Fonnte
+
+1. Hubungkan nomor WhatsApp pengirim melalui **Device → Connect** di dashboard Fonnte dan pastikan perangkat terhubung serta kuotanya tersedia. Webhook tidak diperlukan untuk pengiriman satu arah ini.
+2. Isi konfigurasi pada `.env` dengan token perangkat pengirim:
+
+```dotenv
+FONNTE_ENABLED=true
+FONNTE_TOKEN=token_perangkat_anda
+APP_URL=https://ipl.domain-anda.id
+```
+
+3. Isi nomor WhatsApp warga melalui **Data Warga** atau impor CSV, misalnya `081234567890` atau `+6281234567890`.
+4. Terapkan migrasi dan jalankan scheduler di terminal terpisah:
+
+```bash
+php artisan config:clear
+php artisan migrate
+php artisan schedule:work
+```
+
+Untuk production gunakan cron scheduler dan jalankan `php artisan config:cache` setelah perubahan konfigurasi. Default WhatsApp nonaktif sampai dikonfigurasi. Satu instalasi memakai satu token/nomor pengirim untuk seluruh perumahan. Simpan token hanya pada server; `.env` tidak dimasukkan ke Git. `APP_URL` harus dapat diakses warga agar tautan dalam pesan bisa dibuka dari HP.
+
+Untuk uji dengan akun warga dan nomor WhatsApp milik sendiri, buat satu tagihan khusus akun tersebut, lalu proses antrean:
+
+```bash
+php artisan app:send-whatsapp --limit=1
+```
+
+Perintah tersebut mengirim pesan nyata ke antrean tertua yang memenuhi syarat. Untuk menguji kuitansi, verifikasi transfer atau catat penerimaan tunai akun uji, lalu proses antrean kembali. Tagihan dan kuitansi yang diterbitkan saat WhatsApp nonaktif tidak dikirim retroaktif.
+
+Fitur **Aktifkan notifikasi layar HP / Web Push** telah dihapus. Lonceng aplikasi tetap tersedia untuk pemberitahuan, termasuk unggah bukti, penolakan pembayaran, dan pengumuman.
+
+Lihat [panduan notifikasi dan Fonnte](docs/NOTIFIKASI.md) untuk contoh kuitansi WhatsApp, cron production, status antrean, retry, dan penanganan kegagalan.
 
 ## Development dan pengujian
 
@@ -214,7 +254,7 @@ Lihat [panduan notifikasi dan Web Push](docs/NOTIFIKASI.md) untuk kunci VAPID, s
 # Backend: database SQLite in-memory, terpisah dari data aplikasi
 php artisan test
 
-# Frontend: format rupiah dan Service Worker/Web Push
+# Frontend: format rupiah dan pemilihan pembayaran
 npm run test:frontend
 
 # Build aset produksi
@@ -231,18 +271,18 @@ Pengujian mencakup isolasi perumahan, autentikasi, tagihan, verifikasi/cash, kon
 
 ```text
 app/
-├── Console/Commands/      # Admin, pengingat, dan pengiriman Web Push
+├── Console/Commands/      # Admin, pengingat, dan pengiriman WhatsApp
 ├── Http/Controllers/     # Admin, pengurus, warga, dan layanan bersama
 ├── Models/               # Perumahan, rumah, warga, tagihan, kas, dan notifikasi
 ├── Notifications/        # Notifikasi database per perumahan
 ├── Policies/             # Otorisasi resource
-└── Services/             # Pembayaran, impor, laporan, sesi, dan Web Push
+└── Services/             # Pembayaran, impor, laporan, sesi, dan WhatsApp
 database/migrations/      # Skema dan migrasi pembaruan
 resources/
 ├── css/                  # Tema dan komponen UI responsif
-├── js/                   # Interaksi, format rupiah, dan langganan push
+├── js/                   # Interaksi, format rupiah, dan pemilihan pembayaran
 └── views/                # Layout, dashboard, formulir, dan dokumen Blade
-public/service-worker.js  # Penerimaan dan navigasi Web Push
+public/service-worker.js  # Menonaktifkan worker Web Push lama
 tests/                    # Pengujian backend dan frontend
 docs/                     # Panduan penggunaan, notifikasi, dan deployment
 ```
@@ -252,13 +292,13 @@ docs/                     # Panduan penggunaan, notifikasi, dan deployment
 | Dokumen | Isi |
 | --- | --- |
 | [Panduan penggunaan](docs/PANDUAN-PENGGUNA.md) | Rumah dan tarif IPL, format CSV, aturan pembaruan, cash, kuitansi, pengumuman, password, dan laporan. |
-| [Notifikasi & Web Push](docs/NOTIFIKASI.md) | Lonceng, pengingat, VAPID, izin browser, scheduler, dan retry. |
+| [Notifikasi & WhatsApp](docs/NOTIFIKASI.md) | Lonceng, pengingat dan kuitansi teks WhatsApp Fonnte, scheduler, dan status pengiriman. |
 | [Deployment & pembaruan](docs/DEPLOYMENT.md) | Konfigurasi production, upgrade tanpa menghapus data, backup, dan troubleshooting. |
 | [Keamanan](SECURITY.md) | Kontrol akses, perlindungan data, pemeriksaan dependensi, dan batas audit. |
 
 ## Cakupan saat ini
 
-Pembayaran transfer diverifikasi manual oleh pengurus. Integrasi payment gateway, rekonsiliasi bank otomatis, email/WhatsApp, cicilan, dan percakapan chat belum tersedia. Web Push memerlukan konfigurasi server serta pengujian pada perangkat tujuan.
+Pembayaran transfer diverifikasi manual oleh pengurus. Integrasi payment gateway, rekonsiliasi bank otomatis, email, cicilan, dan percakapan chat belum tersedia. WhatsApp pengingat melalui Fonnte memerlukan token perangkat, nomor warga, dan scheduler aktif.
 
 ## Lisensi
 

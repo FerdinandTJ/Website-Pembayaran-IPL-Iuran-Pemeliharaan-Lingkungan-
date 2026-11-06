@@ -1,5 +1,4 @@
 import { setupPaymentSelections } from './payment-selection.js';
-import { setupWebPush } from './web-push.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import * as bootstrap from 'bootstrap';
@@ -231,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => { setupWebPush(); });
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // Keep column context when tables become stacked cards on small screens.

@@ -14,6 +14,11 @@ return [
     |
     */
 
+    'fonnte' => [
+        'enabled' => env('FONNTE_ENABLED', false),
+        'token' => env('FONNTE_TOKEN'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],

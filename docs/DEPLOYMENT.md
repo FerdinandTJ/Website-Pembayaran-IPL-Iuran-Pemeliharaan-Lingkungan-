@@ -18,7 +18,7 @@ SESSION_SECURE_COOKIE=true
 CACHE_STORE=database
 ```
 
-Sesuaikan koneksi database, kredensial, dan kontak VAPID dengan deployment Anda. Simpan `.env` di server, di luar version control. Gunakan `APP_KEY` yang tetap untuk instalasi yang sudah berjalan; mengganti kunci dapat membuat data terenkripsi, termasuk pratinjau impor dan langganan push, tidak dapat dibaca.
+Sesuaikan koneksi database, kredensial, dan token perangkat Fonnte dengan deployment Anda. Simpan `.env` di server, di luar version control. Gunakan `APP_KEY` yang tetap untuk instalasi yang sudah berjalan; mengganti kunci dapat membuat data terenkripsi, termasuk pratinjau impor, tidak dapat dibaca.
 
 - Private storage, `.env`, `.git`, backup, dan database harus tidak dapat diunduh melalui web server.
 - Berikan izin tulis untuk user proses web dan scheduler pada `storage/` serta `bootstrap/cache/`; hindari izin tulis publik untuk seluruh proyek.
@@ -43,7 +43,7 @@ php artisan optimize
 
 `key:generate` dan pembuatan admin ditujukan untuk instalasi baru. Perintah admin menolak pembuatan admin kedua. Build frontend dapat dilakukan di pipeline lalu hasil `public/build` disertakan pada artefak deployment; Node.js tidak harus berjalan sebagai proses server aplikasi.
 
-Jika Web Push dipakai, buat kunci VAPID dan set kontak operator sesuai [panduan notifikasi](NOTIFIKASI.md). Jalankan cron scheduler untuk pengingat dan pengiriman push.
+Untuk WhatsApp, atur `FONNTE_ENABLED=true` dan `FONNTE_TOKEN` sesuai [panduan Fonnte](NOTIFIKASI.md). Jalankan cron scheduler untuk pengingat dan pengiriman WhatsApp.
 
 ## Pembaruan instalasi yang sudah berjalan
 
@@ -67,7 +67,7 @@ Jalankan `up` sesudah seluruh langkah berhasil. Jika ada langkah gagal, periksa 
 
 **Jangan gunakan `migrate:fresh` pada data yang ingin dipertahankan.** Tidak perlu membuat ulang `APP_KEY` atau menjalankan seeder untuk pembaruan. Gunakan `composer install` dengan lock file, tanpa mengabaikan pemeriksaan platform.
 
-Setelah deploy, periksa login, dashboard, halaman tagihan, dan koneksi scheduler. Restart proses scheduler/queue jangka panjang agar memuat kode baru; jika menggunakan queue worker, jalankan `php artisan queue:restart` sesuai process manager deployment. Notifikasi database dan pengiriman Web Push saat ini tidak memerlukan worker queue tambahan.
+Setelah deploy, periksa login, dashboard, halaman tagihan, dan koneksi scheduler. Restart proses scheduler/queue jangka panjang agar memuat kode baru; jika menggunakan queue worker, jalankan `php artisan queue:restart` sesuai process manager deployment. Notifikasi database dan pengiriman WhatsApp saat ini tidak memerlukan worker queue tambahan.
 
 ### Peninjauan data rumah dari versi lama
 
@@ -89,11 +89,10 @@ Pastikan cron menggunakan database, konfigurasi, dan izin file yang sama dengan 
 
 | Tugas | Jadwal |
 | --- | --- |
-| Pengiriman Web Push | Setiap menit |
+| Pengiriman WhatsApp | Setiap menit |
 | Pengingat jatuh tempo H-3/H+1 | 08.00 WIB setiap hari |
 | Pembersihan pratinjau impor warga kedaluwarsa | 02.00 waktu aplikasi |
 | Pembersihan pratinjau impor rumah kedaluwarsa | 02.05 waktu aplikasi |
-| Pembersihan antrean push lama | 02.15 waktu aplikasi |
 
 Periksa jadwal dengan:
 
@@ -108,10 +107,10 @@ Untuk development, gunakan `php artisan schedule:work` di terminal terpisah. Det
 | Data | Alasan |
 | --- | --- |
 | Database | Akun, rumah, tagihan, kas, kuitansi, pengumuman, dan notifikasi |
-| `.env` / secret environment | `APP_KEY`, konfigurasi database, serta kunci VAPID bila diatur melalui environment |
-| `storage/app/private/` | Bukti pembayaran dan kunci VAPID lokal |
+| `.env` / secret environment | `APP_KEY`, konfigurasi database, serta token perangkat Fonnte |
+| `storage/app/private/` | Bukti pembayaran |
 
-Bukti transfer sengaja berada di private storage dan diakses melalui route terotorisasi; jangan memindahkannya ke folder publik. Perintah `storage:link` tidak diperlukan untuk membuka bukti pembayaran. Kunci VAPID lokal berada di `storage/app/private/web-push/vapid.json`; jangan masukkan file ini ke Git.
+Bukti transfer sengaja berada di private storage dan diakses melalui route terotorisasi; jangan memindahkannya ke folder publik. Perintah `storage:link` tidak diperlukan untuk membuka bukti pembayaran. Simpan token Fonnte hanya dalam environment server.
 
 ## Pemeriksaan rutin
 
@@ -135,5 +134,5 @@ Jalankan pengujian pada lingkungan development/CI dengan dependensi development 
 | Error izin tulis atau halaman 500 | Periksa ownership `storage/`, `bootstrap/cache/`, dan `storage/logs/laravel.log`; jangan membuka debug production. |
 | Tidak dapat membuat admin | Aplikasi membatasi satu admin. Periksa apakah admin sudah ada; jangan menghapus data hanya untuk melewati pembatasan. |
 | Tidak ada pengingat | Periksa cron, `schedule:list`, tanggal jatuh tempo, status tagihan, dan keaktifan akun/perumahan. |
-| Tombol push tidak tersedia di HP | Periksa HTTPS, dukungan browser, izin, kunci VAPID, dan pemasangan Home Screen pada iPhone/iPad. |
-| Push tertunda atau tidak tampil | Periksa scheduler, log, respons provider, jaringan, serta pengaturan notifikasi/hemat daya OS. Penerimaan provider tidak membuktikan perangkat menampilkan pesan. |
+| WhatsApp belum terkirim | Periksa `FONNTE_ENABLED`, token perangkat, koneksi/kuota Fonnte, nomor warga dan scheduler. |
+| Status WhatsApp `uncertain` | Periksa riwayat Fonnte sebelum mengirim ulang; respons API belum membuktikan pesan diterima warga. |

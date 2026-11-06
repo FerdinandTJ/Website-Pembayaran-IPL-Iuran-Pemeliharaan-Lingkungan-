@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PushSubscription;
 use App\Services\SessionRevoker;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,9 +25,7 @@ class ProfileController extends Controller
             $request->user()->forceFill(['password' => $data['password']])->save();
             app(SessionRevoker::class)->revoke($request->user(), $request->session()->getId());
         });
-        $previousSession = $request->session()->getId();
         $request->session()->regenerate();
-        PushSubscription::where('user_id', $request->user()->id)->where('session_hash', hash('sha256', $previousSession))->update(['session_hash' => hash('sha256', $request->session()->getId())]);
 
         return back()->with('success', 'Password berhasil diubah. Sesi perangkat lain telah diakhiri.');
     }
