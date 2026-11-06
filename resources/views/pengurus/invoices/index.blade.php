@@ -2,7 +2,7 @@
 @section('title', 'Tagihan - EnviroPay')
 @section('page-title', 'Daftar Tagihan')
 @section('page-subtitle', 'Pantau seluruh tagihan warga berdasarkan periode dan status.')
-@section('page-actions')<a class="btn btn-primary" href="{{ route('pengurus.invoices.create') }}"><i class="bi bi-plus-lg me-1"></i>Buat Tagihan</a>@endsection
+@section('page-actions')<a class="btn btn-outline-primary" href="{{ route('pengurus.invoice-templates.index') }}">Template Tagihan</a><a class="btn btn-primary" href="{{ route('pengurus.invoices.create') }}"><i class="bi bi-plus-lg me-1"></i>Buat Tagihan</a>@endsection
 
 @section('content')
 <form class="filter-bar row g-2 mb-3">

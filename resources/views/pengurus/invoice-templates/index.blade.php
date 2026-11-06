@@ -1,0 +1,12 @@
+@extends('layouts.app')
+@section('title', 'Template Tagihan - EnviroPay')
+@section('page-title', 'Template Tagihan Rutin')
+@section('page-subtitle', 'Simpan komponen dan aturan jatuh tempo, lalu tinjau setiap penerbitan bulanan.')
+@section('page-actions')<a class="btn btn-primary" href="{{ route('pengurus.invoice-templates.create') }}">Tambah Template</a>@endsection
+@section('content')
+<div class="alert alert-light border">Template tidak menerbitkan tagihan otomatis. Pilih periode, periksa pratinjau, lalu konfirmasi. Satu template hanya dapat diterbitkan sekali per periode. Tagihan susulan dibuat melalui Buat Tagihan manual.</div>
+<div class="card"><div class="table-responsive"><table class="table"><thead><tr><th>Template</th><th>Komponen / Penerima</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead><tbody>
+@forelse($templates as $template)<tr><td><strong>{{ $template->name }}</strong><small class="d-block text-secondary">{{ $template->title }} · {{ $template->runs_count }} kali diterbitkan</small></td><td>Rp {{ number_format(collect($template->components)->sum('amount'),0,',','.') }}<small class="d-block">{{ $template->recipient_mode === 'all' ? 'Semua warga aktif yang memenuhi syarat' : count($template->resident_ids ?? []).' warga terpilih' }}</small></td><td>Tanggal {{ $template->due_day }}<small class="d-block">{{ $template->due_month_offset ? 'Bulan berikutnya' : 'Bulan tagihan' }}</small></td><td>{{ $template->is_active ? 'Aktif' : 'Nonaktif' }}</td><td><div class="d-flex flex-wrap gap-2"><a class="btn btn-sm btn-outline-primary" href="{{ route('pengurus.invoice-templates.edit',$template) }}">Edit</a>@if($template->is_active)<form method="GET" action="{{ route('pengurus.invoice-templates.preview',$template) }}" class="d-flex gap-2"><label class="visually-hidden" for="template-period-{{ $template->id }}">Periode</label><input id="template-period-{{ $template->id }}" type="month" class="form-control form-control-sm" name="period" value="{{ today('Asia/Jakarta')->format('Y-m') }}" required><button class="btn btn-sm btn-primary">Tinjau</button></form>@endif</div></td></tr>
+@empty<tr><td colspan="5"><x-empty-state title="Belum ada template tagihan" message="Buat template untuk mengurangi pengisian ulang setiap bulan." /></td></tr>@endforelse
+</tbody></table></div><div class="card-footer bg-white">{{ $templates->links() }}</div></div>
+@endsection

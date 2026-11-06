@@ -35,11 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('[data-invoice-total]').textContent = `Rp ${total.toLocaleString('id-ID')}`;
         };
 
-        const addComponent = () => {
+        const addComponent = (component = {}) => {
             const fragment = componentTemplate.content.cloneNode(true);
             const row = fragment.querySelector('.component-row');
             row.querySelector('[data-field="name"]').name = `components[${nextIndex}][name]`;
             row.querySelector('[data-field="amount"]').name = `components[${nextIndex}][amount]`;
+            row.querySelector('[data-field="name"]').value = component.name ?? '';
+            row.querySelector('[data-field="amount"]').value = component.amount ?? '';
             nextIndex += 1;
 
             componentsContainer.appendChild(fragment);
@@ -53,8 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         };
 
-        addComponentButton.addEventListener('click', addComponent);
-        addComponent();
+        addComponentButton.addEventListener('click', () => { addComponent(); updateTotal(); });
+        let initialComponents = [];
+        try { initialComponents = JSON.parse(componentsContainer.dataset.initialComponents || '[]'); } catch { /* Use one empty row. */ }
+        (initialComponents.length ? initialComponents : [{}]).forEach(addComponent);
+        updateTotal();
     }
 
     const recipientModes = document.querySelectorAll('[data-recipient-mode]');

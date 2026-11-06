@@ -35,7 +35,7 @@
                     <button type="button" class="btn btn-sm btn-soft-primary" data-add-component><i class="bi bi-plus-lg"></i> Tambah komponen</button>
                 </div>
                 <div class="card-body p-4">
-                    <div data-components class="vstack gap-2"></div>
+                    <div data-components data-initial-components="{{ json_encode(old('components', [])) }}" class="vstack gap-2"></div>
                     <template id="component-template">
                         <div class="row g-2 align-items-end component-row">
                             <div class="col-md"><label class="form-label">Nama komponen</label><input class="form-control" data-field="name" required placeholder="Contoh: Kebersihan"></div>

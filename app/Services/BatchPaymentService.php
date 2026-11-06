@@ -156,7 +156,7 @@ class BatchPaymentService
         Cashflow::create([
             'housing_id' => $batch->housing_id, 'payment_batch_id' => $batch->id, 'created_by' => $actor->id,
             'name' => 'Pembayaran gabungan #'.$batch->id.' · '.$invoices->count().' tagihan · '.mb_substr($batch->snapshot['resident'], 0, 100),
-            'type' => 'income', 'source' => 'invoice', 'total_cashflow' => $batch->total_amount,
+            'type' => 'income', 'source' => 'invoice', 'category' => 'ipl', 'total_cashflow' => $batch->total_amount,
         ]);
         Receipt::create(['payment_batch_id' => $batch->id, 'number' => 'KWG-'.$batch->housing_id.'-'.$batch->id,
             'snapshot' => [

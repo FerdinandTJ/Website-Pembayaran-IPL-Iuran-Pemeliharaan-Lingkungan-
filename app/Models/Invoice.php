@@ -15,7 +15,7 @@ class Invoice extends Model
     use HasFactory;
 
     protected $fillable = [
-        'payment_batch_id', 'house_id', 'house_label', 'payment_method', 'paid_at', 'payment_note',
+        'invoice_template_run_id', 'payment_batch_id', 'house_id', 'house_label', 'payment_method', 'paid_at', 'payment_note',
         'housing_id', 'user_id', 'created_by', 'title',
         'billing_period', 'due_date', 'total_amount', 'status',
         'payment_proof_path', 'submitted_at', 'verified_at',

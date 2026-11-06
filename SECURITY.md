@@ -35,3 +35,13 @@ Gunakan document root `public/`, HTTPS, environment production, `SESSION_DRIVER=
 ## Pengiriman WhatsApp Fonnte
 
 Token perangkat disimpan dalam environment server dan tidak dikirim ke browser. API memakai endpoint HTTPS tetap tanpa redirect dan timeout terbatas. Nomor dibatasi ke satu nomor seluler Indonesia untuk mencegah injeksi target grup/daftar/variabel. Kepemilikan tagihan, status pembayaran, akun dan perumahan diperiksa ulang sebelum mengirim. Antrean transaksional memiliki deduplikasi dan retry terbatas; hasil tidak pasti tidak diulang otomatis. Riwayat tidak menyimpan token, pesan atau respons mentah provider. Nama, nominal dan tautan tagihan dikirim melalui Fonnte ke nomor warga; pastikan data nomor warga benar. Pengujian otomatis menggunakan respons API palsu; pengiriman nyata perlu diuji pada perangkat Fonnte operator.
+
+## Alur keuangan pengurus
+
+Penerbitan template memerlukan pratinjau dan konfirmasi, checksum HMAC atas konfigurasi/penerima/nominal, penguncian template, serta unique key template-periode. Perubahan data setelah pratinjau harus ditinjau ulang. Penerima, penanggung jawab rumah dan perumahan divalidasi server. Nota memakai nama file acak pada private storage, tipe berbasis MIME dan batas 5 MB; unduhan memerlukan otorisasi pengurus perumahan.
+
+Log aktivitas finansial memakai daftar kolom yang diizinkan dan transaksi database yang sama dengan perubahan inti, tanpa token, password atau path lampiran. Tidak ada endpoint edit/hapus log. Penutupan buku diserialisasi bersama mutasi kas menggunakan lock perumahan; transaksi di atau sebelum periode tertutup tidak dapat mengubah saldo yang telah disahkan. Pembukaan kembali memerlukan alasan dan urutan dari periode tertutup terakhir. Pembatasan berlaku pada aplikasi, bukan terhadap administrator yang dapat menulis langsung ke database.
+
+## Pemantauan WhatsApp
+
+Riwayat WhatsApp hanya menyediakan GET untuk pengurus aktif dan dibatasi berdasarkan perumahan, termasuk relasi akun, tagihan dan kuitansi. Pemindahan akun ke perumahan lain tidak mengekspos profil barunya kepada pengurus lama. Nomor tujuan percobaan baru disimpan terenkripsi dan tidak disertakan dalam serialisasi model secara default. Pesan mentah, token dan respons provider tidak disimpan/ditampilkan oleh halaman riwayat. Keterangan kendala memakai pemetaan kode yang diizinkan; kode tak dikenal ditampilkan secara umum. Membaca riwayat tidak memicu API, retry atau perubahan status.

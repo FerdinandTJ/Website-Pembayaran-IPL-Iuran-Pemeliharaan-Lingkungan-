@@ -80,6 +80,11 @@ class WhatsAppSender
             $receiptUrl = rtrim(config('app.url'), '/').route('receipts.show', $invoice, false);
             $message = app(WhatsAppReceiptMessage::class)->render($receipt, $receiptUrl);
         }
+        $delivery->update([
+            'recipient_phone' => $phone, 'recipient_name' => $user->name,
+            'recipient_house' => $isReceipt ? ($receipt->snapshot['address'] ?? null) : $invoice->house_label,
+            'last_attempt_at' => now(),
+        ]);
         $result = $client->send($phone, $message);
         $status = $result['status'];
         if ($status === 'pending' && $delivery->attempts >= 5) {

@@ -4,16 +4,12 @@ namespace App\Http\Controllers\Pengurus;
 
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
-use App\Models\House;
 use App\Models\Invoice;
 use App\Models\User;
-use App\Services\InvoiceNotifier;
-use Carbon\Carbon;
+use App\Services\InvoiceIssuer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class InvoiceController extends Controller
@@ -68,76 +64,10 @@ class InvoiceController extends Controller
             'components.*.amount' => ['required', 'numeric', 'integer', 'min:1000', 'max:999999999999'],
         ]);
 
-        $period = Carbon::createFromFormat('Y-m', $data['billing_period'])->startOfMonth();
-        if (Carbon::parse($data['due_date'])->lt($period)) {
-            throw ValidationException::withMessages(['due_date' => 'Jatuh tempo tidak boleh sebelum periode tagihan.']);
-        }
-
-        $recipients = User::with('house')->where('housing_id', $housingId)
-            ->where('role', 'warga')
-            ->where('is_active', true)
-            ->when(
-                $data['recipient_mode'] === 'selected',
-                fn ($query) => $query->whereIn('id', array_unique($data['resident_ids']))
-            )
-            ->get();
-
-        if ($recipients->isEmpty()) {
-            return back()->withInput()->with('error', 'Belum ada warga aktif yang dapat menerima tagihan.');
-        }
-
-        $total = collect($data['components'])->sum('amount');
-
-        if ($total > 9999999999999) {
-            throw ValidationException::withMessages(['components' => 'Total nominal tagihan terlalu besar.']);
-        }
-        $sent = 0;
-        $skipped = 0;
-        DB::transaction(function () use ($request, $data, $period, $recipients, $total, &$sent, &$skipped) {
-            foreach ($recipients as $resident) {
-                $resident = User::lockForUpdate()->findOrFail($resident->id);
-                if (! $resident->is_active) {
-                    $skipped++;
-
-                    continue;
-                }
-                $house = $resident->house_id ? House::lockForUpdate()->findOrFail($resident->house_id) : null;
-                if ($house && $house->responsible_user_id !== $resident->id) {
-                    $skipped++;
-
-                    continue;
-                }
-                $components = $data['components'];
-                $amount = $total;
-                if ($request->boolean('apply_house_tariff', true) && $house?->occupancy === 'vacant') {
-                    if ($house->vacant_billing === 'exempt') {
-                        $skipped++;
-
-                        continue;
-                    }
-                    if ($house->vacant_billing === 'custom') {
-                        $amount = $house->vacant_amount;
-                        $components = [['name' => 'Tarif khusus rumah kosong', 'amount' => $amount]];
-                    }
-                }
-                $invoice = Invoice::create([
-                    'house_id' => $house?->id,
-                    'house_label' => $house?->label ?? $resident->house_address,
-                    'housing_id' => $request->user()->housing_id,
-                    'user_id' => $resident->id,
-                    'created_by' => $request->user()->id,
-                    'title' => $data['title'],
-                    'billing_period' => $period,
-                    'due_date' => $data['due_date'],
-                    'total_amount' => $amount,
-                    'status' => InvoiceStatus::Unpaid,
-                ]);
-
-                $invoice->components()->createMany($components);
-                $sent++;
-                app(InvoiceNotifier::class)->send($invoice, 'issued');
-            }
-        });
+        $data['apply_house_tariff'] = $request->boolean('apply_house_tariff', true);
+        $result = app(InvoiceIssuer::class)->issue($request->user(), $data);
+        $sent = $result['issued'];
+        $skipped = $result['skipped'];
 
         return redirect()->route('pengurus.invoices.index')
             ->with('success', "Tagihan berhasil dikirim kepada {$sent} warga.".($skipped ? " {$skipped} penerima dilewati sesuai penanggung jawab/tarif rumah." : ''));

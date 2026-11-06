@@ -2,6 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\AccountingPeriod;
+use App\Models\ArrearsFollowUp;
+use App\Models\Cashflow;
+use App\Models\Invoice;
+use App\Models\InvoiceTemplate;
+use App\Models\InvoiceTemplateRun;
+use App\Models\PaymentBatch;
+use App\Observers\FinancialActivityObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
@@ -24,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        foreach ([Invoice::class, Cashflow::class, PaymentBatch::class,
+            InvoiceTemplate::class, InvoiceTemplateRun::class, ArrearsFollowUp::class, AccountingPeriod::class] as $model) {
+            $model::observe(FinancialActivityObserver::class);
+        }
         Paginator::useBootstrapFive();
         if ($this->app->environment('production')) {
             config(['app.debug' => false, 'session.secure' => true, 'session.http_only' => true, 'session.same_site' => 'lax']);

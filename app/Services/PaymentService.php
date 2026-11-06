@@ -49,7 +49,7 @@ class PaymentService
             $locked->update(['payment_batch_id' => null, 'status' => InvoiceStatus::Verified, 'payment_method' => $method, 'paid_at' => now(),
                 'verified_at' => now(), 'verified_by' => $actor->id, 'payment_note' => $note, 'rejection_reason' => null]);
             Cashflow::create(['housing_id' => $locked->housing_id, 'invoice_id' => $locked->id, 'created_by' => $actor->id,
-                'name' => $locked->title.' - '.$locked->resident->name, 'type' => 'income', 'source' => 'invoice', 'total_cashflow' => $locked->total_amount]);
+                'name' => $locked->title.' - '.$locked->resident->name, 'type' => 'income', 'source' => 'invoice', 'category' => 'ipl', 'total_cashflow' => $locked->total_amount]);
             $receipt = $this->receipt($locked, false);
             app(InvoiceNotifier::class)->send($locked, $method === 'cash' ? 'cash_paid' : 'verified');
 

@@ -267,3 +267,13 @@ input[data-rupiah] { font-variant-numeric: tabular-nums; }
 .payment-invoice-item:last-child { border-bottom:0; padding-bottom:0; }
 .list-group-item.active { background:var(--app-primary); border-color:var(--app-primary); }
 @media(max-width:575.98px) { .payment-selection-summary .btn { width:100%; } }
+
+/* Keep the annual matrix inside the same content margins as other reports. */
+.annual-report-card { max-width: 100%; }
+.annual-report-card .table-responsive { max-width: 100%; }
+.annual-report-table { min-width: 1360px; }
+.annual-report-table > :not(caption) > * > * { padding: 14px 10px; }
+.annual-report-table .annual-month { min-width: 88px; }
+.annual-report-table .annual-house { position: sticky; left: 0; z-index: 1; min-width: 220px; max-width: 260px; white-space: normal; background: #fff; }
+.annual-report-table thead .annual-house { z-index: 2; background: #fafbf9; }
+.annual-report-table tbody tr:hover .annual-house { background: #fbfcfa; }

@@ -1,6 +1,6 @@
 # Panduan Penggunaan EnviroPay
 
-[Kembali ke README](../README.md) · [Notifikasi](NOTIFIKASI.md) · [Deployment](DEPLOYMENT.md)
+[Kembali ke README](../README.md) · [Notifikasi](../README.md#whatsapp-fonnte) · [Deployment](../README.md#deployment-dan-pembaruan)
 
 Panduan ini menjelaskan aturan data rumah, impor, pembayaran, dan laporan untuk pengurus serta warga.
 
@@ -106,6 +106,81 @@ Buka menu **Laporan** untuk melihat:
 
 - **Tunggakan**: tagihan `unpaid`/`rejected` yang jatuh temponya sebelum hari ini (Asia/Jakarta), termasuk milik warga nonaktif. Tagihan `pending` tidak dihitung sebagai tunggakan. Umur tunggakan dibagi menjadi 1–30, 31–60, dan >60 hari. Filter umur memilih warga yang memiliki tunggakan pada kelompok itu; total tetap mencakup seluruh tunggakan warga tersebut. Tombol **Lihat** membuka tagihan penyusunnya.
 - **Tagihan Bulanan**: berdasarkan `billing_period`, dengan jumlah/nominal setiap status dan persentase nominal terverifikasi. Status yang ditampilkan adalah kondisi saat ini, bukan rekonstruksi status pada akhir bulan.
-- **Kas Bulanan**: berdasarkan tanggal pencatatan (`created_at`), dengan saldo awal, pemasukan manual/tagihan, pengeluaran, dan saldo akhir. Perubahan atau penghapusan transaksi manual dapat mengubah laporan bulan sebelumnya.
+- **Kas Bulanan**: berdasarkan tanggal transaksi (tanggal pencatatan untuk data lama), dengan saldo awal, pemasukan manual/tagihan, pengeluaran, dan saldo akhir. Perubahan atau penghapusan transaksi manual dapat mengubah laporan bulan sebelumnya.
+
+### Laporan pemasukan, pengeluaran, dan kategori
+
+1. Buka **Laporan → Kas Bulanan** dan pilih bulan transaksi.
+2. Pada **Jenis transaksi**, pilih **Semua transaksi**, **Pemasukan saja**, atau **Pengeluaran saja**.
+3. Pilih kategori bila diperlukan, misalnya **Keamanan**, **Kebersihan**, atau **Perbaikan & Pemeliharaan**.
+4. Saring sumber tagihan/manual atau cari nama transaksi, lalu tekan **Tampilkan**.
+5. Periksa total pemasukan, pengeluaran, selisih dan **Rekap per Kategori**. Semuanya mengikuti filter dan seluruh halaman transaksi.
+6. Tekan **Unduh PDF** untuk laporan siap cetak atau **Ekspor CSV** untuk pengolahan spreadsheet. Kedua format mengikuti filter dan mencakup seluruh transaksi yang cocok, bukan hanya halaman saat ini.
+
+**Saldo Kas Seluruh Perumahan** menampilkan saldo awal, seluruh pemasukan/pengeluaran bulan itu, serta saldo akhir tanpa filter detail. Selisih hasil filter bukan saldo kas. Contoh: filter pengeluaran Keamanan dapat menunjukkan Rp500.000 pengeluaran dengan selisih -Rp500.000, sementara saldo perumahan tetap dihitung dari semua transaksi.
+
+Untuk memberi kategori, buka **Arus Kas → Tambah Transaksi** atau **Edit** transaksi manual. Pilihan yang tersedia: Keamanan, Kebersihan, Listrik & Air, Perbaikan & Pemeliharaan, Administrasi, Kegiatan Warga, Donasi & Sumbangan, Lainnya, serta Belum Dikategorikan. Kategori dapat dipakai pada pemasukan maupun pengeluaran sesuai tujuan transaksi. Tombol **Laporan Bulanan** di Arus Kas membawa filter saat ini ke laporan; pilih kembali bulan yang diinginkan.
+
+Kategori **Pembayaran Tagihan** diisi otomatis untuk pembayaran transfer/cash tunggal dan gabungan. Totalnya mencakup seluruh komponen pembayaran; kategori ini tidak membagi satu pembayaran ke keamanan/kebersihan. Pencatatan otomatis tetap terkunci dan tidak dapat dikategorikan ulang lewat edit kas manual. Transaksi manual lama ditandai **Belum Dikategorikan** hingga pengurus meninjaunya, tanpa menebak kategori dari nama transaksi.
+
+### Unduh laporan PDF
+
+Tombol **Unduh PDF** tersedia pada laporan Tunggakan, Tagihan Bulanan, dan Kas Bulanan. Pilih filter dan tekan **Tampilkan** sebelum mengunduh. PDF A4 landscape mencantumkan nama/alamat perumahan, periode atau tanggal kondisi tunggakan, filter aktif, nama pengurus, waktu unduh WIB, ringkasan, tabel rincian, dan nomor halaman. Untuk laporan kas, saldo seluruh perumahan ditampilkan terpisah dari total hasil filter. Judul kolom tabel diulang ketika berlanjut ke halaman berikutnya.
+
+Batas PDF adalah 2.000 baris hasil filter; jika lebih, persempit filter atau gunakan CSV. Laporan kosong tetap dapat diunduh dan menampilkan keterangan tidak ada data. Laporan menggambarkan data saat diunduh. Periode kas yang ditutup ditandai pada halaman dan PDF; transaksi yang memengaruhi periode tersebut dikunci. File diunduh langsung dari aplikasi dengan autentikasi pengurus dan tidak dikirim sebagai lampiran WhatsApp.
 
 CSV mengikuti filter, mencakup seluruh halaman, menggunakan UTF-8, dan melindungi teks yang berpotensi menjadi formula spreadsheet. Bagian awal CSV memuat ringkasan; tabel rincian dimulai dari baris nama kolom. Semua laporan dibatasi ke perumahan pengurus yang login.
+
+## Rekap Tahunan per Rumah
+
+1. Buka **Laporan → Rekap Tahunan Rumah** dan pilih tahun dari dropdown. Daftar mencakup lima tahun sebelumnya, tahun berjalan, dan satu tahun berikutnya; rentangnya diperluas bila ada tagihan lebih lama/lebih jauh atau tahun lain sedang dipilih. Daftar memakai data perumahan sendiri dan dibatasi 2000-2100.
+2. Cari kode rumah, alamat, atau nama penanggung jawab saat ini bila diperlukan.
+3. Pilih filter status lalu tekan **Tampilkan**. Filter **Belum Lunas** memilih baris dengan tagihan belum dibayar/bukti ditolak; **Menunggu Verifikasi** memilih baris yang punya bukti belum diproses. Satu rumah bisa cocok dengan kedua filter tersebut. Filter **Seluruh tagihan terbit sudah lunas** tidak mencakup rumah yang belum punya tagihan sama sekali.
+4. Baca status Januari-Desember. **Lunas** berarti seluruh tagihan bulan itu sudah terverifikasi. **Verifikasi** berarti seluruh sisa tagihan sedang diperiksa. **Belum Lunas** berarti masih ada yang belum dibayar/bukti ditolak; jika ada juga pembayaran pending, jumlahnya ditampilkan di bawah status. Tanda **—** berarti belum ada tagihan, bukan lunas.
+5. Klik status suatu bulan untuk membuka daftar tagihan milik rumah tersebut. Nama warga pada rincian adalah pemilik masing-masing tagihan; bisa berbeda dari penanggung jawab rumah saat ini. Tersedia akses ke verifikasi, pembayaran cash, atau kuitansi sesuai status.
+6. **Ekspor CSV** dan **Unduh PDF** mengikuti filter dan mencakup seluruh halaman. PDF memakai A4 landscape, kode L/V/B/B/V dengan legenda, dan dibatasi 500 baris. CSV tidak dibatasi jumlah baris PDF.
+
+Periode mengikuti bulan pada tagihan, bukan tanggal pembayaran. Beberapa tagihan dalam satu bulan, termasuk tagihan khusus, dirangkum menjadi satu status. Ringkasan total tagihan, lunas, menunggu verifikasi, belum lunas, dan sudah jatuh tempo mengikuti filter. Nominal belum lunas tidak mencakup menunggu verifikasi, dan tagihan yang belum jatuh tempo belum masuk nominal sudah jatuh tempo.
+
+Pergantian penghuni atau penanggung jawab tidak memindahkan tagihan historis antar-rumah. Rumah mengikuti `house_id` pada saat tagihan diterbitkan; nama penanggung jawab pada matriks menunjukkan data saat ini. Tagihan lama yang tidak memiliki rumah tercatat ditampilkan dalam baris terpisah per akun. Rumah kosong atau bebas iuran tanpa tagihan tetap bertanda belum ada tagihan; laporan tidak menganggapnya sudah membayar atau mengarang tagihan baru. Akun warga nonaktif tetap diperhitungkan bila memiliki tagihan. Seluruh akses dibatasi ke perumahan pengurus aktif.
+
+## Template Tagihan Rutin
+
+1. Buka **Template Tagihan → Tambah Template**. Isi nama, judul, komponen, penerima dan tanggal jatuh tempo. Pilih bulan tagihan atau bulan berikutnya untuk jatuh tempo. Jika tanggal tidak tersedia (misalnya 31 Februari), sistem memakai hari terakhir bulan tersebut.
+2. Tentukan apakah tarif khusus/bebas iuran rumah kosong diterapkan. Warga aktif dan penanggung jawab rumah dinilai kembali pada saat penerbitan, bukan dibekukan saat menyimpan template.
+3. Simpan, pilih periode pada daftar template, lalu tekan **Tinjau**. Periksa penerima, rumah, komponen, nominal, penerima yang dilewati, dan jatuh tempo.
+4. Centang konfirmasi dan tekan **Terbitkan Tagihan**. Tagihan, komponen, riwayat dan notifikasi disimpan bersama dalam satu transaksi. Pengiriman WhatsApp tetap diproses scheduler.
+5. Template yang sama tidak bisa diterbitkan dua kali pada periode yang sama, meskipun diedit. Bila penerima/tarif berubah setelah pratinjau, tinjau ulang. Tagihan susulan dibuat manual. Pencegahan ganda ini berlaku per template, bukan lintas semua template/tagihan manual.
+
+Template dapat dinonaktifkan melalui Edit. Mengubah template tidak mengubah tagihan yang sudah terbit. Menyimpan template atau membuka pratinjau tidak mengirim tagihan. Penerbitan tetap membutuhkan tindakan pengurus; belum ada penagihan otomatis bulanan.
+
+## Tindak Lanjut Tunggakan
+
+Buka **Tindak Lanjut** atau tombol **Tindak Lanjut** pada laporan tunggakan. Pilih warga, lalu catat status komunikasi, catatan dan pengurus penanggung jawab. **Janji Bayar** dan **Hubungi Kembali** wajib memiliki tanggal hari ini atau sesudahnya. Catatan bersifat internal, tersimpan sebagai riwayat baru dan tidak mengubah pembayaran atau mengirim pesan WhatsApp. Riwayat terbaru tetap dapat ditemukan setelah warga melunasi tunggakan. **Tindak Lanjut Selesai** berarti komunikasi selesai, bukan tagihan otomatis lunas.
+
+## Tanggal Transaksi dan Nota
+
+Pada **Arus Kas → Tambah/Edit**, pilih tanggal transaksi: tanggal uang diterima/dikeluarkan, paling lambat hari ini. Waktu pencatatan tetap diisi server dan tidak dapat diketik pengguna. Pembayaran tagihan terverifikasi/cash selalu dicatat memakai tanggal server saat disahkan. Laporan dan grafik kas mengikuti tanggal transaksi; data lama memakai tanggal pencatatan sebagai tanggal transaksi awal.
+
+Unggah satu JPG/PNG/WebP atau PDF maksimal 5 MB pada **Nota / bukti transaksi**. Bukti disimpan privat dan hanya dapat diunduh pengurus perumahan. Mengunggah file baru mengganti lampiran lama; centang **Hapus lampiran lama** untuk melepasnya. Lampiran terhapus ketika transaksi manual dihapus. Kas otomatis dari tagihan tetap tidak dapat diedit atau dihapus lewat kas manual.
+
+## Riwayat Aktivitas Keuangan
+
+Menu **Riwayat Aktivitas** mencatat pembuatan/perubahan/penghapusan kas, penerbitan dan status tagihan, pembayaran gabungan, template, catatan tindak lanjut serta penutupan/pembukaan buku. Filter jenis aktivitas dan tanggal, lalu buka **Lihat nilai sebelum / sesudah**. Nama pelaku dan waktu server dicatat; operasi CLI tanpa akun login ditandai Sistem / CLI. Log tidak menyimpan token, password, isi file atau path privat lampiran. Tidak tersedia edit/hapus log melalui aplikasi. Riwayat dimulai sejak fitur diaktifkan dan tidak direkonstruksi untuk data lama; akses administrator database tetap berada di luar pembatasan aplikasi.
+
+## Tutup Buku Kas
+
+1. Buka **Tutup Buku**, pilih bulan yang sudah berakhir, dan periksa saldo awal, pemasukan, pengeluaran dan saldo akhir. Buka **Periksa Laporan Kas** untuk memeriksa rincian.
+2. Setelah angka dan bukti benar, centang konfirmasi lalu tekan **Tutup Buku Bulan Ini**. Ringkasan penutupan, pelaku dan waktu server disimpan.
+3. Transaksi dalam periode tertutup tidak bisa ditambah, diubah, dipindahkan tanggal, diganti nota atau dihapus. Transaksi lebih lama juga dikunci bila memengaruhi saldo awal periode tertutup. Ini mencegah laporan yang telah disahkan berubah melalui tanggal mundur.
+4. Jika perlu koreksi, buka kembali **periode tertutup paling akhir** lebih dulu dan tulis alasan minimal 10 karakter. Untuk mengoreksi bulan lebih lama, buka juga periode tertutup sesudahnya secara berurutan. Setelah koreksi, tinjau dan tutup kembali periode yang diperlukan.
+
+Bulan berjalan/masa depan belum dapat ditutup. Penguncian berlaku untuk buku kas berdasarkan tanggal transaksi, bukan melarang pembayaran tagihan lama: tagihan lama tetap bisa dibayar sekarang dan masuk kas bulan berjalan. Laporan tagihan dan rekap tahunan tetap mencerminkan status pembayaran terkini. Membuka kembali dan menutup ulang tercatat pada riwayat aktivitas.
+
+## Riwayat WhatsApp
+
+Buka menu **Riwayat WhatsApp** untuk memantau pengingat dan kuitansi. Pilih tanggal, jenis pesan, status, nama warga atau rumah, lalu tekan **Tampilkan**. Default tanggal adalah bulan berjalan hingga hari ini; kosongkan keduanya untuk seluruh riwayat. Ringkasan mengikuti seluruh filter dan seluruh halaman.
+
+Klik **Detail** untuk melihat kendala dan saran, nomor tujuan percobaan terakhir, nomor akun saat ini, waktu proses, tagihan atau kuitansi terkait. Riwayat lama mungkin belum mencatat nomor tujuan/waktu percobaan dan tidak ditebak dari data sekarang. Perubahan nomor warga tidak mengirim ulang pesan yang sudah gagal/dilewati. Nomor tujuan baru disimpan terenkripsi.
+
+**Diterima Fonnte** berarti permintaan diterima API, belum membuktikan pesan sampai atau dibaca. **Perlu Diperiksa** berarti hasil tidak pasti; periksa dashboard Fonnte sebelum mempertimbangkan pengiriman ulang. Halaman ini tidak mengirim pesan dan belum menyediakan tombol kirim ulang. Hanya pengurus aktif perumahan yang dapat mengakses riwayatnya. [Panduan status dan penanganan kendala](../README.md#jadwal-dan-pemeriksaan-pengiriman).

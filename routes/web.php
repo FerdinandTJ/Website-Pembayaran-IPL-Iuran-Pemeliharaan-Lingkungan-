@@ -8,17 +8,23 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentBatchController;
 use App\Http\Controllers\PaymentProofController;
+use App\Http\Controllers\Pengurus\AccountingPeriodController;
+use App\Http\Controllers\Pengurus\ActivityLogController;
+use App\Http\Controllers\Pengurus\AnnualReportController;
 use App\Http\Controllers\Pengurus\CashflowController;
 use App\Http\Controllers\Pengurus\CashPaymentController;
 use App\Http\Controllers\Pengurus\DashboardController as ManagerDashboardController;
+use App\Http\Controllers\Pengurus\FollowUpController;
 use App\Http\Controllers\Pengurus\HouseController;
 use App\Http\Controllers\Pengurus\HouseImportController;
 use App\Http\Controllers\Pengurus\InvoiceController as ManagerInvoiceController;
+use App\Http\Controllers\Pengurus\InvoiceTemplateController;
 use App\Http\Controllers\Pengurus\PaymentAccountController;
 use App\Http\Controllers\Pengurus\ReportController;
 use App\Http\Controllers\Pengurus\ResidentController;
 use App\Http\Controllers\Pengurus\ResidentImportController;
 use App\Http\Controllers\Pengurus\VerificationController;
+use App\Http\Controllers\Pengurus\WhatsAppHistoryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\Warga\DashboardController as ResidentDashboardController;
@@ -60,10 +66,29 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     Route::prefix('pengurus')->name('pengurus.')->middleware('role:pengurus')->group(function () {
         Route::get('/dashboard', ManagerDashboardController::class)->name('dashboard');
+        Route::resource('invoice-templates', InvoiceTemplateController::class)->except(['show', 'destroy'])->parameters(['invoice-templates' => 'invoiceTemplate']);
+        Route::get('/invoice-templates/{invoiceTemplate}/preview', [InvoiceTemplateController::class, 'preview'])->name('invoice-templates.preview');
+        Route::post('/invoice-templates/{invoiceTemplate}/issue', [InvoiceTemplateController::class, 'issue'])->middleware('throttle:sensitive')->name('invoice-templates.issue');
+        Route::get('/follow-ups', [FollowUpController::class, 'index'])->name('follow-ups.index');
+        Route::get('/follow-ups/{resident}', [FollowUpController::class, 'show'])->name('follow-ups.show');
+        Route::post('/follow-ups/{resident}', [FollowUpController::class, 'store'])->name('follow-ups.store');
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('/whatsapp-history', [WhatsAppHistoryController::class, 'index'])->name('whatsapp-history.index');
+        Route::get('/whatsapp-history/{whatsAppDelivery}', [WhatsAppHistoryController::class, 'show'])->name('whatsapp-history.show');
+        Route::get('/accounting-periods', [AccountingPeriodController::class, 'index'])->name('accounting-periods.index');
+        Route::post('/accounting-periods/close', [AccountingPeriodController::class, 'close'])->middleware('throttle:sensitive')->name('accounting-periods.close');
+        Route::post('/accounting-periods/{accountingPeriod}/reopen', [AccountingPeriodController::class, 'reopen'])->middleware('throttle:sensitive')->name('accounting-periods.reopen');
+        Route::get('/cashflows/{cashflow}/attachment', [CashflowController::class, 'attachment'])->middleware('throttle:documents')->name('cashflows.attachment');
+
+        Route::get('/reports/annual', [AnnualReportController::class, 'index'])->name('annual-report.index');
+        Route::get('/reports/annual/export', [AnnualReportController::class, 'export'])->name('annual-report.export');
+        Route::get('/reports/annual/pdf', [AnnualReportController::class, 'pdf'])->middleware('throttle:documents')->name('annual-report.pdf');
         Route::get('/reports/{report}', [ReportController::class, 'index'])
             ->whereIn('report', ['arrears', 'billing', 'cashflow'])->name('reports.index');
         Route::get('/reports/{report}/export', [ReportController::class, 'export'])
             ->whereIn('report', ['arrears', 'billing', 'cashflow'])->name('reports.export');
+        Route::get('/reports/{report}/pdf', [ReportController::class, 'pdf'])
+            ->whereIn('report', ['arrears', 'billing', 'cashflow'])->middleware('throttle:documents')->name('reports.pdf');
         Route::resource('houses', HouseController::class)->except(['show', 'destroy']);
         Route::get('/house-imports', [HouseImportController::class, 'index'])->name('house-imports.index');
         Route::get('/house-imports/template', [HouseImportController::class, 'template'])->name('house-imports.template');

@@ -63,20 +63,33 @@ class ReportService
         ];
     }
 
-    public function cashflow(int $housingId, Carbon $month): array
+    public function cashflow(int $housingId, Carbon $month, array $filters = []): array
     {
         $base = Cashflow::forHousing($housingId);
-        $before = (clone $base)->where('created_at', '<', $month);
+        $before = (clone $base)->accountingBefore($month);
         $opening = (float) (clone $before)->where('type', 'income')->sum('total_cashflow')
             - (float) (clone $before)->where('type', 'expense')->sum('total_cashflow');
-        $query = $base->where('created_at', '>=', $month)->where('created_at', '<', $month->copy()->addMonth());
+        $period = (clone $base)->accountingRange($month, $month->copy()->addMonth());
+        $periodIncome = (float) (clone $period)->where('type', 'income')->sum('total_cashflow');
+        $periodExpense = (float) (clone $period)->where('type', 'expense')->sum('total_cashflow');
+        $query = (clone $period)->matchingFilters($filters);
         $income = (float) (clone $query)->where('type', 'income')->sum('total_cashflow');
         $expense = (float) (clone $query)->where('type', 'expense')->sum('total_cashflow');
+        $categories = (clone $query)->select('category')->selectRaw('COUNT(*) as count')
+            ->selectRaw("SUM(CASE WHEN type = 'income' THEN total_cashflow ELSE 0 END) as income")
+            ->selectRaw("SUM(CASE WHEN type = 'expense' THEN total_cashflow ELSE 0 END) as expense")
+            ->groupBy('category')->orderBy('category')->get();
 
         return [
-            'query' => $query->with('invoice')->orderBy('created_at')->orderBy('id'),
+            'query' => $query->with('invoice', 'paymentBatch')->orderByRaw(Cashflow::ACCOUNTING_DATE_SQL)->orderBy('id'),
+            'category_summary' => $categories,
             'summary' => [
-                'opening' => $opening, 'income' => $income, 'expense' => $expense, 'closing' => $opening + $income - $expense,
+                // Actual housing balances remain independent of the detail filters.
+                'opening' => $opening, 'closing' => $opening + $periodIncome - $periodExpense,
+                'period_income' => $periodIncome, 'period_expense' => $periodExpense,
+                'income' => $income, 'expense' => $expense, 'net' => $income - $expense,
+                'count' => (clone $query)->count(),
+                'filtered' => (bool) array_filter(array_intersect_key($filters, array_flip(['type', 'category', 'source', 'search'])), fn ($v) => $v !== null && $v !== ''),
                 'manual' => (float) (clone $query)->where('type', 'income')->where('source', 'manual')->sum('total_cashflow'),
                 'invoice' => (float) (clone $query)->where('type', 'income')->where('source', 'invoice')->sum('total_cashflow'),
             ],
