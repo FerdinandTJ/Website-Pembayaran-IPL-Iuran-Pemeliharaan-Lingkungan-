@@ -2,14 +2,14 @@
 
 | Atribut | Nilai |
 | --- | --- |
-| Versi dokumen | 1.2 — halaman error EnviroPay |
+| Versi dokumen | 1.3 — penyelarasan rancangan Waterfall |
 | Tanggal penyusunan | 6 November 2026 |
-| Peninjauan terakhir | 7 November 2026 |
-| Acuan kode | Baseline `86e670b` beserta pembaruan halaman error; seluruh migrasi sampai `2026_11_06_000006` |
+| Peninjauan terakhir | 8 November 2026 |
+| Acuan kode | Baseline `94cda91`; seluruh migrasi sampai `2026_11_06_000006` |
 | Produk | EnviroPay — pengelolaan Iuran Pemeliharaan Lingkungan |
 | Status | Draf untuk peninjauan kebutuhan dan penyempurnaan bertahap |
 
-[Kembali ke README](../README.md) · [Panduan pengguna](PANDUAN-PENGGUNA.md)
+[Kembali ke README](../README.md) · [Panduan pengguna](PANDUAN-PENGGUNA.md) · [Bahan Bab III](BAB-III-PERANCANGAN.md)
 
 ## 1. Tujuan
 
@@ -105,9 +105,16 @@ Dokumen sudah mencakup keempat tahap sebagai dasar awal. Hasil UAT, angka SLA/ki
 | 1.0 | 6 November 2026 | Baseline kebutuhan, model data, proses dan verifikasi; disesuaikan dengan penghapusan Web Push. |
 | 1.1 | 7 November 2026 | Pisahkan kebutuhan akun, perjelas opsionalitas rumah, lengkapi aliran DFD dan skenario penerimaan, serta catat hasil audit struktur dan diagram. |
 | 1.2 | 7 November 2026 | Tambahkan FR-29/AT-23 untuk halaman error mandiri, pertahankan kontrak JSON/validasi dan verifikasi penyembunyian detail teknis pada HTML. |
+| 1.3 | 8 November 2026 | Selaraskan rancangan Waterfall, matriks FR/BR/NFR, kasus uji, wireframe, aturan cash akun nonaktif dan panduan reset; tambahkan pemeriksaan dokumen yang dapat diulang. |
 
 ## 9. Pengelolaan perubahan
 
 Setiap perubahan perilaku memperbarui ID kebutuhan terkait, aturan bisnis, diagram dan pemetaan pengujiannya. Perubahan migrasi memperbarui PDM/kamus data berdasarkan database kosong terisolasi; jangan menyalin data warga atau kredensial ke dokumentasi. Catat tanggal dan commit acuan baru pada halaman ini.
 
 Dokumen kebutuhan tidak menggantikan [panduan pengguna](PANDUAN-PENGGUNA.md), [petunjuk instalasi](../README.md#instalasi-lokal), atau [catatan keamanan](../SECURITY.md).
+
+## 10. Pemakaian pada perancangan skripsi
+
+[Bahan Bab III](BAB-III-PERANCANGAN.md) menyusun baseline ini dalam kerangka Waterfall yang dipilih pemilik proyek. Lampirannya menambah spesifikasi use case, aktivitas, kelas/deployment, normalisasi, algoritma, wireframe dan rencana pengujian/instrumen. FR/BR/NFR serta skema fisik tetap mengacu pada SRS ini; tidak ada penomoran kebutuhan baru yang menggantikan FR-01–29. Pengesahan kebutuhan, data lapangan, jadwal dan UAT tidak dinyatakan selesai hanya karena dokumentasi rancangan sudah tersedia.
+
+Rincian kesesuaian lintas artefak dan arti status audit tersedia pada [keselarasan dokumen](perancangan/09-KONSISTENSI-DAN-AUDIT.md) serta [hasil audit](AUDIT-DOKUMENTASI.md). ID kebutuhan tetap; penjelasan tambahan tidak dianggap perubahan fitur aplikasi.

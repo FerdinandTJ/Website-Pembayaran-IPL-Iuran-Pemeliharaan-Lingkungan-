@@ -68,7 +68,7 @@ Kebutuhan berikut dirumuskan dari jalur kode yang tersedia pada baseline. Status
 | BR-03 | Status rumah: `occupied`, `rented`, `vacant`, `renovation`. Tarif kosong: `full`, `custom`, `exempt`. Nominal khusus mengganti total tagihan baru, bukan potongan. |
 | BR-04 | Beberapa tagihan untuk warga dan bulan yang sama diperbolehkan; tidak ada UQ pada pasangan warga/periode. Penerbitan ulang template yang sama/periode yang sama ditolak. Perlindungan duplikasi pembayaran mengikuti BR-07. |
 | BR-05 | Tagihan memakai `unpaid`, `pending`, `verified`, `rejected`. Hanya `verified` berarti lunas. Pengingat hanya untuk `unpaid`/`rejected`. |
-| BR-06 | Pembayaran tidak mendukung sebagian nominal. Satu pilihan tagihan memakai alur tunggal; beberapa memakai batch, maksimal 100 ID unik milik satu warga. |
+| BR-06 | Pembayaran tidak mendukung sebagian nominal. Satu pilihan tagihan memakai alur tunggal; beberapa memakai batch, maksimal 100 ID unik milik satu warga. Pengurus dapat menerima cash untuk warga nonaktif yang masih berutang; hal ini tidak mengaktifkan akses warga atau WhatsApp. |
 | BR-07 | Satu pembayaran sah menghasilkan satu pencatatan kas otomatis dan satu kuitansi; batch tidak menambah kas per tagihan anggotanya. |
 | BR-08 | `payment_batch_invoice` mempertahankan keanggotaan historis; `invoices.payment_batch_id` menunjuk batch saat ini. Batch ditolak dapat digantikan percobaan pembayaran baru tanpa menghapus batch lama. |
 | BR-09 | Snapshot kuitansi/batch menyimpan rincian historis. Rekap tahunan memakai `invoices.house_id` saat penerbitan, bukan rumah warga saat ini. |

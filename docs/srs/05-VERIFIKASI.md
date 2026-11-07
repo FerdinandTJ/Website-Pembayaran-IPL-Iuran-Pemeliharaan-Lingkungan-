@@ -126,3 +126,7 @@ Status setelah audit: **baseline teknis ditinjau, masih draf untuk persetujuan k
 Pratinjau HTML hasil Blade dirender tanpa server aplikasi pada ukuran desktop 1440 px dan HP 320/390 px. Sampel 404, 419, 500, 503 dan 504 diperiksa untuk overflow serta ukuran tombol; contoh 404 desktop dan 419 HP juga diperiksa visual. Ini bukan hasil UAT atau bukti seluruh browser/perangkat.
 
 Penanganan ini berlaku untuk exception HTML yang mencapai Laravel. Error yang dihasilkan lebih dahulu oleh web server/proxy, atau maintenance yang sudah diprerender operator, memerlukan konfigurasi pada lapisan tersebut. Exception tetap mengikuti mekanisme pelaporan Laravel; detail teknis HTML disembunyikan juga saat APP_DEBUG aktif. Pemetaan terkini mencakup 29 FR dan 23 skenario AT; catatan audit versi 1.1 di atas tetap merupakan catatan versi sebelumnya.
+
+## 7. Audit lintas dokumen — versi 1.3
+
+Pada 8 November 2026, pemeriksaan ulang untuk baseline `94cda91` mencatat 173 tes backend/1.714 assertion dan 12 tes frontend lulus. Hasil skema, matriks FR/BR/NFR, seluruh diagram dan wireframe dicatat pada [Audit Dokumentasi](../AUDIT-DOKUMENTASI.md). Catatan versi 1.1/1.2 di atas adalah riwayat sesuai waktunya, bukan jumlah suite yang bersaing. Tidak ada hasil UAT, pengukuran beban atau persetujuan penelitian baru yang dinyatakan dari rerun teknis ini.

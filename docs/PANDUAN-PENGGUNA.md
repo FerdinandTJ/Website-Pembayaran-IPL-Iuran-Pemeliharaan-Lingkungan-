@@ -1,6 +1,6 @@
 # Panduan Penggunaan EnviroPay
 
-[Kembali ke README](../README.md) · [Notifikasi](../README.md#whatsapp-fonnte) · [Deployment](../README.md#deployment-dan-pembaruan)
+[Kembali ke README](../README.md) · [Indeks dokumentasi](README.md) · [Notifikasi](../README.md#whatsapp-fonnte) · [Deployment](../README.md#deployment-dan-pembaruan)
 
 Panduan ini menjelaskan aturan data rumah, impor, pembayaran, dan laporan untuk pengurus serta warga.
 
@@ -98,7 +98,7 @@ Kuitansi transfer diterbitkan saat verifikasi. Transfer lama yang sudah terverif
 
 Pengurus dapat membuat draft pengumuman, memeriksanya, lalu menerbitkan kepada seluruh warga aktif. Draft tidak terlihat oleh warga. Penerbitan mengirim satu notifikasi per penerima dan menampilkan tiga pengumuman terbaru pada dashboard. Warga baru dapat membaca pengumuman yang masih terbit. Pengumuman terbit tidak dapat diedit; arsipkan dan buat pengumuman pengganti. Arsip hilang dari daftar aktif tetapi tautan notifikasi lama tetap dapat dibuka dengan label arsip. Isi berupa teks biasa, tanpa lampiran.
 
-Semua peran dapat memakai **Profil → Ubah Password**, dengan password lama, password baru minimal 8 karakter, dan konfirmasi yang cocok. Password baru harus berbeda. Akun tetap masuk di perangkat saat ini, sesi database pada perangkat lain dihapus, dan remember token diganti. Deployment saat ini menggunakan `SESSION_DRIVER=database`; pertahankan driver ini untuk penghentian sesi perangkat lain. Reset password pengurus/admin yang sudah tersedia tetap dapat digunakan.
+Semua peran dapat memakai **Profil → Ubah Password**, dengan password lama, password baru minimal 8 karakter, dan konfirmasi yang cocok. Password baru harus berbeda. Akun tetap masuk di perangkat saat ini, sesi database pada perangkat lain dihapus, dan remember token diganti. Deployment saat ini menggunakan `SESSION_DRIVER=database`; pertahankan driver ini untuk penghentian sesi perangkat lain. Admin dapat mereset password pengurus; pengurus dapat mereset password warga perumahannya. Tidak ada menu reset password admin oleh pengurus atau warga.
 
 ## Laporan Pengurus
 

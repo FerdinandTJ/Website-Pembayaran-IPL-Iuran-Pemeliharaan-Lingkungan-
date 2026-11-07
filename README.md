@@ -330,6 +330,9 @@ docs/                     # SRS, panduan penggunaan dan gambar dokumentasi
 
 | Dokumen | Isi |
 | --- | --- |
+| [Bahan Bab III skripsi](docs/BAB-III-PERANCANGAN.md) | Metode Waterfall, analisis/perancangan, UML, arsitektur, basis data, wireframe, algoritma, rencana uji dan instrumen penelitian. |
+| [Indeks dokumentasi](docs/README.md) | Peta naskah Bab III, lampiran perancangan, SRS dan panduan penggunaan. |
+| [Audit keselarasan dokumentasi](docs/AUDIT-DOKUMENTASI.md) | Cakupan dan bukti pemeriksaan kebutuhan, rancangan, skema, diagram dan pengujian. |
 | [Software Requirements Specification](docs/SRS.md) | Kebutuhan sistem, ERD, PDM, kamus data, DFD, alur proses dan kriteria penerimaan. |
 | [Panduan penggunaan](docs/PANDUAN-PENGGUNA.md) | Rumah dan tarif IPL, format CSV, aturan pembaruan, cash, kuitansi, pengumuman, password, dan laporan. |
 | [Keamanan](SECURITY.md) | Kontrol akses, perlindungan data, pemeriksaan dependensi, dan batas audit. |
